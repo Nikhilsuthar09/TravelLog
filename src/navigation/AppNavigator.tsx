@@ -1,0 +1,47 @@
+// src/navigation/AppNavigator.tsx
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import BottomTabs from "./BottomTabs";
+import TripDetailsScreen from "@screens/TripDetailsScreen";
+import EditItineraryScreen from "@screens/EditItineraryScreen";
+import EditPackingScreen from "@screens/EditPackingScreen";
+import EditExpensesScreen from "@screens/EditExpensesScreen";
+import { Trip } from "types";
+import { NavigatorScreenParams } from "@react-navigation/native";
+
+export type RootStackParamList = {
+  Tabs: NavigatorScreenParams<BottomTabParamList>;
+  TripDetails: Trip;
+  EditItinerary: {tripId: string};
+  EditPacking: {tripId: string};
+  EditExpenses: {tripId: string}
+}
+export type BottomTabParamList = {
+  Home:undefined;
+  Trips:{showAddModal?: boolean} | undefined;
+}
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+export default function AppNavigator(){
+  return (
+    <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Screen  name="Tabs" component={BottomTabs}/>
+      <Stack.Screen 
+      name="TripDetails" component={TripDetailsScreen}
+      options={{headerShown:true, title: "Trip Details"}}
+      />
+      <Stack.Screen 
+      name="EditItinerary"
+      component={EditItineraryScreen}
+      options={{headerShown:true, title:"Edit Itinerary"}} />
+      <Stack.Screen 
+      name="EditPacking"
+      component={EditPackingScreen}
+      options={{headerShown:true, title: "Edit Packing"}}/>
+
+      <Stack.Screen 
+      name="EditExpenses"
+      component={EditExpensesScreen}
+      options={{headerShown:true, title: "Edit Expenses"}}/>
+    </Stack.Navigator>
+  )
+}
