@@ -7,8 +7,12 @@ import EditPackingScreen from "@screens/EditPackingScreen";
 import EditExpensesScreen from "@screens/EditExpensesScreen";
 import { Trip } from "types";
 import { NavigatorScreenParams } from "@react-navigation/native";
+import SplashScreen from "@screens/SplashScreen";
+import AuthScreen from "@screens/AuthScreen";
 
 export type RootStackParamList = {
+  Splash:undefined;
+  Auth:undefined;
   Tabs: NavigatorScreenParams<BottomTabParamList>;
   TripDetails: Trip;
   EditItinerary: {tripId: string};
@@ -24,6 +28,8 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function AppNavigator(){
   return (
     <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Screen name="Splash" component={SplashScreen}/>
+      <Stack.Screen name="Auth" component={AuthScreen}/>
       <Stack.Screen  name="Tabs" component={BottomTabs}/>
       <Stack.Screen 
       name="TripDetails" component={TripDetailsScreen}

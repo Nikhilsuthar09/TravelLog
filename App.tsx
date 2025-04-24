@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Text } from "react-native";
 import { TripProvider } from "context/TripContext";
 import AppNavigator from "navigation/AppNavigator";
+import { AuthProvider } from "context/AuthContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -41,10 +42,12 @@ export default function App() {
   }
 
   return (
+    <AuthProvider>
     <TripProvider>
     <NavigationContainer onReady={onLayoutRootView}>
       <AppNavigator />
     </NavigationContainer>
     </TripProvider>
+    </AuthProvider>
   );
 }
