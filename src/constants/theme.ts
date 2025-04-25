@@ -10,6 +10,8 @@ const COLORS = {
   white: "#FFFFFF",
   danger: "#EB5757",
   lightGray: "#E0E0E0",
+  success: "#27AE60",
+  warning: "#F2C94C",
 
   // Calenders
   calendarStartColor: "#2F80ED", // or primary

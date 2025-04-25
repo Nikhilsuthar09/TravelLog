@@ -33,7 +33,7 @@ export default function AppNavigator(){
       <Stack.Screen  name="Tabs" component={BottomTabs}/>
       <Stack.Screen 
       name="TripDetails" component={TripDetailsScreen}
-      options={{headerShown:true, title: "Trip Details"}}
+      options={{headerShown:false, title: "Trip Details"}}
       />
       <Stack.Screen 
       name="EditItinerary"
