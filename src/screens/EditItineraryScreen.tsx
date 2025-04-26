@@ -5,7 +5,7 @@ import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { ItineraryActivity, ItineraryDay } from "@types";
 import { useTrip } from "context/TripContext";
 import { RootStackParamList } from "navigation/AppNavigator";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -14,9 +14,13 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Animated,
+  StatusBar,
 } from "react-native";
 import ActivityModal from "../components/itinerary/ActivityModal";
 import DayList from "../components/itinerary/DayList";
+import CommonEditHeader from "../components/CommonEditHeader";
+import { HEADER_CONFIG } from "../components/CommonEditHeader";
 
 type EditItineraryRouteProp = RouteProp<RootStackParamList, "EditItinerary">;
 // constants for dropdown options
@@ -46,6 +50,7 @@ export default function EditItineraryScreen() {
   const { tripId } = route.params;
   const { trips, updateStructuredItinerary } = useTrip();
   const trip = trips.find((t) => t.id === tripId);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   // itinerary state
   const [days, setDays] = useState<ItineraryDay[]>([]);
@@ -248,31 +253,36 @@ export default function EditItineraryScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Feather name="arrow-left" size={24} color={COLORS.primary} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Edit Itinerary</Text>
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>Save</Text>
-        </TouchableOpacity>
-      </View>
+    <View style={styles.container}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="transparent"
+        translucent={true}
+      />
+      
+      <CommonEditHeader
+        scrollY={scrollY}
+        title="Itinerary"
+        onBackPress={() => navigation.goBack()}
+        onSavePress={handleSave}
+      />
 
-      <View style={styles.content}>
+      <Animated.ScrollView
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={1}
+        contentContainerStyle={styles.content}
+      >
         <DayList
           days={days}
           onAddActivity={handleAddActivity}
           onEditActivity={handleEditActivity}
           onDeleteActivity={handleDeleteActivity}
         />
-      </View>
+      </Animated.ScrollView>
 
       <ActivityModal
         visible={showActivityModal}
@@ -282,7 +292,7 @@ export default function EditItineraryScreen() {
         activity={currentActivity}
         isEditing={isEditingActivity}
       />
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -291,33 +301,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.white,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray,
-  },
-  backButton: {
-    padding: 8,
-  },
-  title: {
-    fontSize: 18,
-    fontFamily: FONTS.semiBold,
-    color: COLORS.text,
-  },
-  saveButton: {
-    padding: 8,
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontFamily: FONTS.medium,
-    color: COLORS.primary,
-  },
   content: {
     flex: 1,
     padding: 16,
+    paddingTop: HEADER_CONFIG.HEIGHT + 16, // Add padding to account for header height
   },
 });

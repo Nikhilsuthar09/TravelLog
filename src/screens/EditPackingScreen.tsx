@@ -3,19 +3,20 @@ import { COLORS, FONTS } from "@constants/theme";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { useTrip } from "context/TripContext";
 import { RootStackParamList } from "navigation/AppNavigator";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  FlatList,
+  StatusBar,
+  Animated,
 } from "react-native";
 import AddItemForm from "../components/packing/AddItemForm";
 import PackingItem from "../components/packing/PackingItem";
 import ProgressBar from "../components/packing/ProgressBar";
+import CommonEditHeader, { HEADER_CONFIG } from "../components/CommonEditHeader";
 
 type EditPackingRouteProp = RouteProp<RootStackParamList, "EditPacking">;
 
@@ -32,6 +33,7 @@ export default function EditPackingScreen() {
   const { tripId } = route.params;
   const { trips, updatePacking } = useTrip();
   const trip = trips.find((t) => t.id === tripId);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   const [packingItems, setPackingItems] = useState<PackingItem[]>([]);
 
@@ -96,22 +98,36 @@ export default function EditPackingScreen() {
     );
   }
 
-  return (
+  const renderHeader = () => (
     <KeyboardAvoidingView
-      style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={100}
     >
       <Text style={styles.title}>Packing List for {trip.title}</Text>
-
       <ProgressBar
         packedItems={packedItemsCount}
         totalItems={totalItemsCount}
       />
-
       <AddItemForm onAddItem={addItem} />
+    </KeyboardAvoidingView>
+  );
 
-      <FlatList
+  return (
+    <View style={styles.container}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="transparent"
+        translucent={true}
+      />
+
+      <CommonEditHeader
+        scrollY={scrollY}
+        title="Packing List"
+        onBackPress={() => navigation.goBack()}
+        onSavePress={handleSave}
+      />
+
+      <Animated.FlatList
         data={packingItems}
         renderItem={({ item }) => (
           <PackingItem
@@ -125,45 +141,31 @@ export default function EditPackingScreen() {
           />
         )}
         keyExtractor={(item) => item.id}
-        style={styles.list}
-        contentContainerStyle={styles.listContent}
+        ListHeaderComponent={renderHeader}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={1}
+        contentContainerStyle={styles.content}
       />
-
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <Text style={styles.saveButtonText}>Save</Text>
-      </TouchableOpacity>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: COLORS.background,
+  },
+  content: {
+    padding: 20,
+    paddingTop: HEADER_CONFIG.HEIGHT + 20,
   },
   title: {
     fontSize: 24,
     fontFamily: FONTS.bold,
     color: COLORS.text,
     marginBottom: 20,
-  },
-  list: {
-    flex: 1,
-  },
-  listContent: {
-    paddingBottom: 20,
-  },
-  saveButton: {
-    backgroundColor: COLORS.primary,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  saveButtonText: {
-    color: COLORS.white,
-    fontFamily: FONTS.bold,
-    fontSize: 16,
   },
 });
