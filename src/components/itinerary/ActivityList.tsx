@@ -102,7 +102,6 @@ export default function ActivityList({
             )}
             {activity.cost && (
               <View style={styles.detailRow}>
-                <Feather name="dollar-sign" size={16} color={COLORS.textSecondary} />
                 <Text style={styles.detailText}>
                   {activity.cost.toLocaleString("en-IN", {
                     style: "currency",

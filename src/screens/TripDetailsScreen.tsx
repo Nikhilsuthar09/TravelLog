@@ -9,13 +9,25 @@ import { RootStackParamList } from "navigation/AppNavigator";
 import { useTrip } from "context/TripContext";
 import { Trip } from "@types";
 import { Feather } from "@expo/vector-icons";
+import { FontAwesome } from "@expo/vector-icons";
 
 type RouteParams = {
   TripDetails: Trip;
 };
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const TABS = ["Itinerary", "Packing", "Expenses"];
+
+type TabItem = {
+  name: string;
+  icon: string;
+  iconSet: typeof Feather | typeof FontAwesome;
+};
+
+const TABS: TabItem[] = [
+  { name: "Itinerary", icon: "edit", iconSet: Feather },
+  { name: "Packing", icon: "briefcase", iconSet: Feather },
+  { name: "Expenses", icon: "inr", iconSet: FontAwesome }
+];
 
 interface Expense {
   id: string;
@@ -97,7 +109,12 @@ export default function TripDetailsScreen() {
   }, [trip]);
 
   const formatCurrency = (amount: number) => {
-    return `₹${amount.toLocaleString('en-IN')}`;
+    return (
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <FontAwesome name="inr" size={14} color={COLORS.text} />
+        <Text>{amount.toLocaleString('en-IN')}</Text>
+      </View>
+    );
   };
 
   const renderItineraryContent = () => {
@@ -119,7 +136,7 @@ export default function TripDetailsScreen() {
       try {
         const structuredItinerary = JSON.parse(trip.structuredItinerary);
         return (
-          <View style={styles.contentView}>
+          <View>
             {structuredItinerary.map((day: any) => (
               <View key={day.id} style={styles.dayContainer}>
                 <Text style={styles.dayTitle}>Day {day.dayNumber}</Text>
@@ -162,7 +179,7 @@ export default function TripDetailsScreen() {
         console.error("Failed to parse structured itinerary:", error);
         // Fallback to plain text if structured parsing fails
         return (
-          <View style={styles.contentView}>
+          <View>
             <Text style={styles.tabContentText}>{trip.itinerary}</Text>
           </View>
         );
@@ -171,7 +188,7 @@ export default function TripDetailsScreen() {
 
     // If only plain text itinerary exists
     return (
-      <View style={styles.contentView}>
+      <View>
         <Text style={styles.tabContentText}>{trip.itinerary}</Text>
       </View>
     );
@@ -235,7 +252,7 @@ export default function TripDetailsScreen() {
     if (!trip.expenses || expenses.length === 0) {
       return (
         <View style={styles.emptyContentContainer}>
-          <Feather name="dollar-sign" size={40} color={COLORS.gray} />
+          <FontAwesome name="inr" size={40} color={COLORS.gray} />
           <Text style={styles.emptyContentText}>No expenses added yet.</Text>
           <Text style={styles.emptyContentSubText}>
             Track your budget and spending for this trip.
@@ -247,19 +264,28 @@ export default function TripDetailsScreen() {
     return (
       <View>
         <View style={styles.budgetSummaryContainer}>
-          <Text style={styles.budgetLabel}>Trip Budget: {formatCurrency(budget)}</Text>
-          <Text style={styles.totalSpentText}>Total Spent: {formatCurrency(totalSpent)}</Text>
+          <View style={styles.budgetRow}>
+            <Text style={styles.budgetLabel}>Trip Budget: </Text>
+            {formatCurrency(budget)}
+          </View>
+          <View style={styles.budgetRow}>
+            <Text style={styles.totalSpentText}>Total Spent: </Text>
+            {formatCurrency(totalSpent)}
+          </View>
           
           {budget > 0 && (
-            <Text style={[
-              styles.balanceText,
-              budget < totalSpent ? styles.overBudget : {}
-            ]}>
-              {budget >= totalSpent 
-                ? `Remaining: ${formatCurrency(budget - totalSpent)}`
-                : `Over Budget by: ${formatCurrency(totalSpent - budget)}`
-              }
-            </Text>
+            <View style={styles.budgetRow}>
+              <Text style={[
+                styles.balanceText,
+                budget < totalSpent ? styles.overBudget : {}
+              ]}>
+                {budget >= totalSpent 
+                  ? "Remaining: "
+                  : "Over Budget by: "
+                }
+              </Text>
+              {formatCurrency(Math.abs(budget - totalSpent))}
+            </View>
           )}
         </View>
 
@@ -272,7 +298,7 @@ export default function TripDetailsScreen() {
                   {expense.description !== expense.category ? expense.description : ''}
                 </Text>
               </View>
-              <Text style={styles.expenseAmount}>{formatCurrency(expense.amount)}</Text>
+              {formatCurrency(expense.amount)}
             </View>
           ))}
         </View>
@@ -319,13 +345,22 @@ export default function TripDetailsScreen() {
         {trip.imageUri && (
           <Image source={{ uri: trip.imageUri }} style={styles.image} />
         )}
-        <View style={styles.headerContent}>
-          <Text style={styles.title}>{trip.title}</Text>
-          <Text style={styles.destination}>{trip.destination}</Text>
-          <View style={styles.dateContainer}>
-            <Text style={styles.date}>
-              {formatDate(trip.startDate)} → {formatDate(trip.endDate)}
-            </Text>
+        <View style={styles.headerOverlay}>
+          <View>
+            <View style={styles.titleRow}>
+              <Feather name="map-pin" size={20} color={COLORS.white} style={styles.icon} />
+              <Text style={styles.title}>{trip.title}</Text>
+            </View>
+            <View style={styles.destinationRow}>
+              <Feather name="navigation" size={18} color={COLORS.white} style={styles.icon} />
+              <Text style={styles.destination}>{trip.destination}</Text>
+            </View>
+            <View style={styles.dateContainer}>
+              <Feather name="calendar" size={16} color={COLORS.white} style={styles.icon} />
+              <Text style={styles.date}>
+                {formatDate(trip.startDate)} → {formatDate(trip.endDate)}
+              </Text>
+            </View>
           </View>
         </View>
       </View>
@@ -333,18 +368,33 @@ export default function TripDetailsScreen() {
       <View style={styles.tabContainer}>
         {TABS.map((tab, index) => (
           <TouchableOpacity
-            key={tab}
+            key={tab.name}
             style={styles.tabButton}
             onPress={() => handleTabPress(index)}
           >
-            <Text
-              style={[
-                styles.tabText,
-                currentIndex === index && styles.activeTabText,
-              ]}
-            >
-              {tab}
-            </Text>
+            <View style={styles.tabContent}>
+              {tab.iconSet === Feather ? (
+                <Feather 
+                  name={tab.icon as keyof typeof Feather.glyphMap} 
+                  size={16} 
+                  color={currentIndex === index ? COLORS.primary : COLORS.textSecondary}
+                />
+              ) : (
+                <FontAwesome 
+                  name={tab.icon as keyof typeof FontAwesome.glyphMap} 
+                  size={16} 
+                  color={currentIndex === index ? COLORS.primary : COLORS.textSecondary}
+                />
+              )}
+              <Text
+                style={[
+                  styles.tabText,
+                  currentIndex === index && styles.activeTabText,
+                ]}
+              >
+                {tab.name}
+              </Text>
+            </View>
           </TouchableOpacity>
         ))}
         <Animated.View
@@ -433,15 +483,60 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     position: 'relative',
+    height: 250,
+  },
+  headerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'flex-end',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  destinationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  icon: {
+    marginRight: 8,
+  },
+  title: {
+    fontSize: 24,
+    fontFamily: FONTS.bold,
+    color: COLORS.white,
+  },
+  destination: {
+    fontSize: 18,
+    fontFamily: FONTS.medium,
+    color: COLORS.white,
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  date: {
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: COLORS.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   backButton: {
     position: 'absolute',
     top: 50,
-    left: 16,
+    left: 18,
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
@@ -454,46 +549,13 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  headerContent: {
-    padding: 20,
-    backgroundColor: COLORS.white,
-    marginTop: -20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontFamily: FONTS.bold,
-    color: COLORS.text,
-  },
-  destination: {
-    fontSize: 18,
-    fontFamily: FONTS.medium,
-    color: COLORS.textSecondary,
-  },
-  dateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  date: {
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-    color: COLORS.gray,
-    backgroundColor: COLORS.lightGray,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-  },
   tabContainer: {
     flexDirection: "row",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 4,
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
-    marginTop: 8,
     elevation: 2,
     zIndex: 1,
     position: 'relative',
@@ -503,46 +565,37 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: "center",
   },
-  tabIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    width: SCREEN_WIDTH / 3,
-    height: 2,
-    backgroundColor: COLORS.primary,
+  tabContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
+ 
   tabText: {
     fontFamily: FONTS.medium,
     fontSize: 14,
     color: COLORS.textSecondary,
+    marginLeft:4
   },
   activeTabText: {
     color: COLORS.primary,
     fontFamily: FONTS.semiBold,
   },
+  tabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: SCREEN_WIDTH / 3,
+    height: 1,
+    backgroundColor: COLORS.primary,
+  },
   tabContentContainer: {
     width: SCREEN_WIDTH,
-    paddingHorizontal: 20,
   },
   tabContentText: {
     fontSize: 14,
     fontFamily: FONTS.regular,
     color: COLORS.text,
     lineHeight: 20,
-  },
-  contentView: {
-    backgroundColor: COLORS.white,
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 16,
-    shadowColor: COLORS.gray,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   editButton: {
     marginTop: 16,
@@ -662,10 +715,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
   },
-  expenseAmount: {
-    fontFamily: FONTS.semiBold,
-    fontSize: 14,
-    color: COLORS.text,
+  budgetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   packingContentContainer: {
     backgroundColor: COLORS.white,

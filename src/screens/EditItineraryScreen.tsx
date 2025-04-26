@@ -11,11 +11,9 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Switch,
 } from "react-native";
 import ActivityModal from "../components/itinerary/ActivityModal";
 import DayList from "../components/itinerary/DayList";
@@ -46,13 +44,11 @@ export default function EditItineraryScreen() {
   const navigation = useNavigation();
   const route = useRoute<EditItineraryRouteProp>();
   const { tripId } = route.params;
-  const { trips, updateItinerary, updateStructuredItinerary } = useTrip();
+  const { trips, updateStructuredItinerary } = useTrip();
   const trip = trips.find((t) => t.id === tripId);
 
-  const [itineraryText, setItineraryText] = useState("");
   // itinerary state
   const [days, setDays] = useState<ItineraryDay[]>([]);
-  const [useStructuredFormat, setUseStructuredFormat] = useState(false);
   // modal States
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [currentDay, setCurrentDay] = useState<ItineraryDay | null>(null);
@@ -85,18 +81,12 @@ export default function EditItineraryScreen() {
   useEffect(() => {
     if (!trip) return;
 
-    // Set legacy text itinerary
-    if (trip.itinerary) {
-      setItineraryText(trip.itinerary);
-    }
-
     // Check if structured itinerary exists
     if (trip.structuredItinerary) {
       try {
         const parsedItinerary = JSON.parse(trip.structuredItinerary);
         if (Array.isArray(parsedItinerary) && parsedItinerary.length > 0) {
           setDays(parsedItinerary);
-          setUseStructuredFormat(true);
         }
       } catch (error) {
         console.error("Failed to parse structured itinerary", error);
@@ -204,7 +194,7 @@ export default function EditItineraryScreen() {
     );
   };
 
-  // Save activity to a day
+  // Save activity to the day
   const handleSaveActivity = (activity: ItineraryActivity) => {
     if (!currentDay) return;
 
@@ -235,143 +225,99 @@ export default function EditItineraryScreen() {
         )
       );
     }
+
+    setShowActivityModal(false);
   };
 
   // Save the entire itinerary
   const handleSave = () => {
-    if (useStructuredFormat) {
-      updateStructuredItinerary(tripId, days);
-    } else {
-      updateItinerary(tripId, itineraryText);
-    }
+    if (!trip) return;
+
+    // Save structured itinerary
+    updateStructuredItinerary(trip.id, days);
     navigation.goBack();
   };
 
-  // Format for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
-      weekday: "short",
       month: "short",
       day: "numeric",
+      year: "numeric",
     });
   };
-
-  // Toggle structured format on/off
-  const toggleFormat = () => {
-    setUseStructuredFormat(!useStructuredFormat);
-  };
-
-  if (!trip) {
-    return (
-      <View style={styles.container}>
-        <Text>Trip not found</Text>
-      </View>
-    );
-  }
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={100}
     >
       <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Feather name="arrow-left" size={24} color={COLORS.primary} />
+        </TouchableOpacity>
         <Text style={styles.title}>Edit Itinerary</Text>
-        <View style={styles.formatToggle}>
-          <Text style={styles.formatLabel}>Structured Format</Text>
-          <Switch
-            value={useStructuredFormat}
-            onValueChange={toggleFormat}
-            trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
-          />
-        </View>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+          <Text style={styles.saveButtonText}>Save</Text>
+        </TouchableOpacity>
       </View>
 
-      {useStructuredFormat ? (
+      <View style={styles.content}>
         <DayList
           days={days}
           onAddActivity={handleAddActivity}
           onEditActivity={handleEditActivity}
           onDeleteActivity={handleDeleteActivity}
         />
-      ) : (
-        <View style={styles.textContainer}>
-          <TextInput
-            style={styles.textInput}
-            value={itineraryText}
-            onChangeText={setItineraryText}
-            placeholder="Enter your itinerary here..."
-            multiline
-            textAlignVertical="top"
-          />
-        </View>
-      )}
-
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <Text style={styles.saveButtonText}>Save</Text>
-      </TouchableOpacity>
+      </View>
 
       <ActivityModal
         visible={showActivityModal}
         onClose={() => setShowActivityModal(false)}
+        onSave={handleSaveActivity}
         day={currentDay}
         activity={currentActivity}
         isEditing={isEditingActivity}
-        onSave={handleSaveActivity}
       />
     </KeyboardAvoidingView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.white,
   },
   header: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray,
-  },
-  title: {
-    fontSize: 24,
-    fontFamily: FONTS.bold,
-    color: COLORS.text,
-    marginBottom: 16,
-  },
-  formatToggle: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
   },
-  formatLabel: {
-    fontSize: 16,
-    fontFamily: FONTS.medium,
+  backButton: {
+    padding: 8,
+  },
+  title: {
+    fontSize: 18,
+    fontFamily: FONTS.semiBold,
     color: COLORS.text,
   },
-  textContainer: {
-    flex: 1,
-    padding: 20,
-  },
-  textInput: {
-    flex: 1,
-    backgroundColor: COLORS.white,
-    borderRadius: 8,
-    padding: 16,
-    fontFamily: FONTS.regular,
-    fontSize: 16,
-    textAlignVertical: "top",
-  },
   saveButton: {
-    backgroundColor: COLORS.primary,
-    padding: 16,
-    margin: 20,
-    borderRadius: 8,
-    alignItems: "center",
+    padding: 8,
   },
   saveButtonText: {
-    color: COLORS.white,
-    fontFamily: FONTS.bold,
     fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.primary,
+  },
+  content: {
+    flex: 1,
+    padding: 16,
   },
 });

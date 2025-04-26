@@ -61,6 +61,15 @@ export default function HomeScreen() {
     return diffDays >= 0 ? diffDays : 0;
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   // navigation Handlers
   const handleNavigateTotrips = () => {
     navigation.navigate("Tabs", { screen: "Trips" });
@@ -171,16 +180,25 @@ export default function HomeScreen() {
 
                   <View style={styles.tripCardOverlay}>
                     <View style={styles.tripCardContent}>
-                      <Text style={styles.destinationText}>
-                        {upcomingTrip.destination}
-                      </Text>
-                      <Text style={styles.tripDateText}>
-                        {upcomingTrip.startDate} - {upcomingTrip.endDate}
-                      </Text>
-                      <View style={styles.countdownBadge}>
-                        <Text style={styles.countdownText}>
-                          {getDaysUntil(upcomingTrip.startDate)} days to go
+                      <View style={styles.destinationContainer}>
+                        <Feather name="map-pin" size={16} color={COLORS.white} style={styles.icon} />
+                        <Text style={styles.destinationText}>
+                          {upcomingTrip.destination}
                         </Text>
+                      </View>
+                      <View style={styles.dateContainer}>
+                        <Feather name="calendar" size={16} color={COLORS.white} style={styles.icon} />
+                        <Text style={styles.tripDateText}>
+                          {formatDate(upcomingTrip.startDate)} → {formatDate(upcomingTrip.endDate)}
+                        </Text>
+                      </View>
+                      <View style={styles.countdownContainer}>
+                        <Feather name="clock" size={16} color={COLORS.white} style={styles.icon} />
+                        <View style={styles.countdownBadge}>
+                          <Text style={styles.countdownText}>
+                            {getDaysUntil(upcomingTrip.startDate)} days to go
+                          </Text>
+                        </View>
                       </View>
                     </View>
                   </View>
@@ -401,25 +419,38 @@ const styles = StyleSheet.create({
   tripCardContent: {
     justifyContent: "flex-end",
   },
+  destinationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   destinationText: {
     fontSize: 20,
     fontFamily: FONTS.bold,
     color: COLORS.white,
   },
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  icon: {
+    marginRight: 8,
+  },
   tripDateText: {
     fontSize: 14,
     fontFamily: FONTS.medium,
     color: COLORS.white,
-    opacity: 0.9,
-    marginTop: 4,
+  },
+  countdownContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   countdownBadge: {
-    marginTop: 8,
     paddingVertical: 4,
     paddingHorizontal: 10,
     backgroundColor: COLORS.primary,
     borderRadius: 20,
-    alignSelf: "flex-start",
   },
   countdownText: {
     color: COLORS.white,

@@ -38,16 +38,16 @@ export default function AppNavigator(){
       <Stack.Screen 
       name="EditItinerary"
       component={EditItineraryScreen}
-      options={{headerShown:true, title:"Edit Itinerary"}} />
+      options={{title:"Edit Itinerary"}} />
       <Stack.Screen 
       name="EditPacking"
       component={EditPackingScreen}
-      options={{headerShown:true, title: "Edit Packing"}}/>
+      options={{title: "Edit Packing"}}/>
 
       <Stack.Screen 
       name="EditExpenses"
       component={EditExpensesScreen}
-      options={{headerShown:true, title: "Edit Expenses"}}/>
+      options={{title: "Edit Expenses"}}/>
     </Stack.Navigator>
   )
 }
