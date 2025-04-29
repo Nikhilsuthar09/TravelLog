@@ -1,12 +1,12 @@
 // src/screens/TripDetailsScreen.tsx
 import { useNavigation } from "@react-navigation/native";
-import { COLORS, FONTS } from "@constants/theme";
+import { COLORS, FONTS, FONT_SIZES } from "@constants/theme";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { useEffect, useState, useRef } from "react";
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Dimensions, Animated } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Dimensions, Animated, Share, Alert } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "navigation/AppNavigator";
-import { useTrip } from "context/TripContext";
+import { RootStackParamList } from "@navigation/AppNavigator";
+import { useTrip } from "@context/TripContext";
 import { Trip } from "@types";
 import { Feather } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
@@ -333,6 +333,39 @@ export default function TripDetailsScreen() {
     outputRange: [0, SCREEN_WIDTH / 3, (SCREEN_WIDTH / 3) * 2],
   });
 
+  const handleShareTrip = async () => {
+    try {
+      const shareMessage = `Check out my trip to ${trip.destination}!\n\n` +
+        `Trip: ${trip.title}\n` +
+        `Dates: ${formatDate(trip.startDate)} → ${formatDate(trip.endDate)}\n\n` +
+        `Itinerary: ${trip.itinerary ? '✓' : '✗'}\n` +
+        `Packing List: ${trip.packing ? '✓' : '✗'}\n` +
+        `Expenses: ${trip.expenses ? '✓' : '✗'}\n\n` +
+        `Shared via TravelLog App`;
+
+      const result = await Share.share({
+        message: shareMessage,
+        title: `My Trip to ${trip.destination}`,
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // Shared with specific activity type
+          console.log('Shared with activity type:', result.activityType);
+        } else {
+          // Shared
+          console.log('Shared successfully');
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // Dismissed
+        console.log('Share dismissed');
+      }
+    } catch (error) {
+      console.error('Error sharing trip:', error);
+      Alert.alert('Error', 'Failed to share trip. Please try again.');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
@@ -342,6 +375,14 @@ export default function TripDetailsScreen() {
         >
           <Feather name="arrow-left" size={24} color={COLORS.primary} />
         </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={styles.shareButton}
+          onPress={handleShareTrip}
+        >
+          <Feather name="share-2" size={24} color={COLORS.primary} />
+        </TouchableOpacity>
+
         {trip.imageUri && (
           <Image source={{ uri: trip.imageUri }} style={styles.image} />
         )}
@@ -507,12 +548,12 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   title: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.h2,
     fontFamily: FONTS.bold,
     color: COLORS.white,
   },
   destination: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.h4,
     fontFamily: FONTS.medium,
     color: COLORS.white,
   },
@@ -521,7 +562,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   date: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.medium,
     color: COLORS.white,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -572,9 +613,9 @@ const styles = StyleSheet.create({
  
   tabText: {
     fontFamily: FONTS.medium,
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     color: COLORS.textSecondary,
-    marginLeft:4
+    marginLeft: 4
   },
   activeTabText: {
     color: COLORS.primary,
@@ -592,7 +633,7 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH,
   },
   tabContentText: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.regular,
     color: COLORS.text,
     lineHeight: 20,
@@ -610,7 +651,7 @@ const styles = StyleSheet.create({
   editButtonText: {
     color: COLORS.white,
     fontFamily: FONTS.medium,
-    fontSize: 16,
+    fontSize: FONT_SIZES.button,
     marginLeft: 8,
   },
   emptyContentContainer: {
@@ -631,14 +672,14 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   emptyContentText: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.medium,
     color: COLORS.textSecondary,
     marginTop: 16,
     marginBottom: 8,
   },
   emptyContentSubText: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.regular,
     color: COLORS.gray,
     textAlign: "center",
@@ -659,19 +700,19 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   budgetLabel: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.semiBold,
     color: COLORS.text,
     marginBottom: 8,
   },
   totalSpentText: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.medium,
     color: COLORS.text,
     marginBottom: 8,
   },
   balanceText: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.medium,
     color: COLORS.primary,
     marginTop: 8,
@@ -706,13 +747,13 @@ const styles = StyleSheet.create({
   },
   expenseCategory: {
     fontFamily: FONTS.medium,
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     color: COLORS.text,
     marginBottom: 4,
   },
   expenseDescription: {
     fontFamily: FONTS.regular,
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     color: COLORS.textSecondary,
   },
   budgetRow: {
@@ -745,12 +786,12 @@ const styles = StyleSheet.create({
   },
   packingProgressLabel: {
     fontFamily: FONTS.medium,
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     color: COLORS.textSecondary,
   },
   packingProgressPercent: {
     fontFamily: FONTS.bold,
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     color: COLORS.primary,
   },
   packingProgressBarContainer: {
@@ -787,7 +828,7 @@ const styles = StyleSheet.create({
   },
   packingItemText: {
     fontFamily: FONTS.regular,
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     color: COLORS.text,
   },
   packingItemTextPacked: {
@@ -809,7 +850,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   dayTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.h4,
     fontFamily: FONTS.bold,
     color: COLORS.text,
     marginBottom: 12,
@@ -821,38 +862,38 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   activityTitle: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.medium,
     color: COLORS.text,
     marginBottom: 8,
   },
   activityDescription: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.regular,
     color: COLORS.textSecondary,
     marginBottom: 8,
     lineHeight: 20,
   },
   activityLocation: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.regular,
     color: COLORS.textSecondary,
     marginBottom: 8,
   },
   activityTime: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.regular,
     color: COLORS.textSecondary,
     marginBottom: 8,
   },
   activityCategory: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.regular,
     color: COLORS.textSecondary,
     marginBottom: 8,
   },
   activityStatus: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.medium,
     color: COLORS.textSecondary,
   },
@@ -864,5 +905,25 @@ const styles = StyleSheet.create({
   },
   activityStatusPlanned: {
     color: COLORS.warning,
+  },
+  shareButton: {
+    position: 'absolute',
+    top: 50,
+    right: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+    shadowColor: COLORS.gray,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
 });

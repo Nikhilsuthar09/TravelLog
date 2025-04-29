@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { COLORS, FONTS } from '@constants/theme';
+import { COLORS, FONTS, FONT_SIZES } from '@constants/theme';
 
 interface ProgressBarProps {
   totalExpenses: number;
@@ -47,12 +47,12 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: FONTS.medium,
-    fontSize: 16,
+    fontSize: FONT_SIZES.body1,
     color: COLORS.text,
   },
   amount: {
     fontFamily: FONTS.semiBold,
-    fontSize: 16,
+    fontSize: FONT_SIZES.body1,
     color: COLORS.primary,
   },
   overBudget: {
@@ -71,6 +71,17 @@ const styles = StyleSheet.create({
   },
   overBudgetBar: {
     backgroundColor: '#FF3B30',
+  },
+  text: {
+    fontSize: FONT_SIZES.body1,
+    fontFamily: FONTS.medium,
+    color: COLORS.textSecondary,
+    marginBottom: 8,
+  },
+  percentage: {
+    fontSize: FONT_SIZES.body1,
+    fontFamily: FONTS.bold,
+    color: COLORS.primary,
   },
 });
 

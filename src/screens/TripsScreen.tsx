@@ -13,14 +13,16 @@ import {
   Dimensions,
 } from "react-native";
 import AddTripModal from "../components/AddTripModal";
-import { COLORS, FONTS } from "../constants/theme";
-import { useTrip } from "context/TripContext";
+import { COLORS, FONTS, FONT_SIZES } from "../constants/theme";
+import { useTrip } from "@context/TripContext";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { BottomTabParamList, RootStackParamList } from "navigation/AppNavigator";
+import { BottomTabParamList, RootStackParamList } from "@navigation/AppNavigator";
 import { Feather } from "@expo/vector-icons";
 import AnimatedHeader, { HEADER_CONFIG } from "../components/AnimatedHeader";
 import { Trip } from "@types";
+import LogoutModal from '../components/LogoutModal';
+import { useAuth } from '@context/AuthContext';
 
 type StactNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type TripScreenRouteProp = RouteProp<BottomTabParamList, "Trips">;
@@ -39,8 +41,9 @@ export default function TripsScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchVisible, setSearchVisible] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { trips, deleteTrip } = useTrip();
+  const { signOut } = useAuth();
   const searchInputRef = useRef<TextInput>(null);
   
   // Check if we should show the add trip modal (from HomeScreen quick action)
@@ -58,17 +61,6 @@ export default function TripsScreen() {
 
   const handleConfirmDates = () => {
     setModalVisible(false);
-  };
-
-  const handleSearchToggle = () => {
-    setSearchVisible(!searchVisible);
-    if (!searchVisible) {
-      // Focus on the search input when showing
-      setTimeout(() => searchInputRef.current?.focus(), 100);
-    } else {
-      // Clear search when hiding
-      setSearchQuery("");
-    }
   };
 
   const getTripStatus = (startDate: string, endDate: string) => {
@@ -102,7 +94,7 @@ export default function TripsScreen() {
       return `${diffToStart} day${diffToStart !== 1 ? 's' : ''} until departure`;
     } else if (today >= start && today <= end) {
       const daysLeft = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      return `Trip in progress • ${daysLeft} day${daysLeft !== 1 ? 's' : ''} remaining`;
+      return `• ${daysLeft} day${daysLeft !== 1 ? 's' : ''} remaining`;
     } else {
       return `Completed ${diffFromEnd} day${diffFromEnd !== 1 ? 's' : ''} ago`;
     }
@@ -195,90 +187,32 @@ export default function TripsScreen() {
           }
           activeOpacity={0.9}
         >
-          <Image
-            source={
-              item.imageUri
-                ? { uri: item.imageUri }
-                : require("../assets/images/default.jpg")
-            }
-            style={styles.image}
-            resizeMode="cover"
-          />
-          <View style={styles.gradient} />
-          
-          <View style={styles.cardHeader}>
-            <View style={[styles.statusBadge, { backgroundColor: status.color }]}>
-              <Text style={styles.statusBadgeText}>{status.label}</Text>
+          <View style={styles.cardContent}>
+            <View style={styles.imageContainer}>
+              <Image
+                source={
+                  item.imageUri
+                    ? { uri: item.imageUri }
+                    : require("../assets/images/default.jpg")
+                }
+                style={styles.image}
+                resizeMode="cover"
+              />
             </View>
-            <TouchableOpacity 
-      style={styles.optionsButton}
-      onPress={() => {
-        // Show options for this trip
-        Alert.alert(
-          item.title,
-          "Choose an action",
-          [
-            { 
-              text: "View Details", 
-              onPress: () => navigation.navigate("TripDetails", {
-                id: item.id,
-                title: item.title,
-                destination: item.destination,
-                startDate: item.startDate,
-                endDate: item.endDate,
-                imageUri: item.imageUri ?? "",
-              }) 
-            },
-            { 
-              text: "Itinerary", 
-              onPress: () => navigation.navigate("EditItinerary", { tripId: item.id }) 
-            },
-            { 
-              text: "Packing List", 
-              onPress: () => navigation.navigate("EditPacking", { tripId: item.id }) 
-            },
-            { 
-              text: "Expenses", 
-              onPress: () => navigation.navigate("EditExpenses", { tripId: item.id }) 
-            },
-            { 
-              text: "Delete", 
-              style: "destructive", 
-              onPress: () => {
-                Alert.alert(
-                  "Delete Trip",
-                  `Are you sure you want to delete "${item.title}"?`,
-                  [
-                    { text: "Cancel", style: "cancel" },
-                    {
-                      text: "Delete",
-                      style: "destructive",
-                      onPress: () => deleteTrip(item.id),
-                    },
-                  ]
-                );
-              } 
-            },
-            { text: "Cancel", style: "cancel" },
-          ]
-        );
-      }}
-    >
-      <Feather name="more-vertical" size={20} color="#FFF" />
-    </TouchableOpacity>
-          </View>
-          
-          <View style={styles.info}>
-            <Text style={styles.destination}>{item.destination}</Text>
-            <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
-            <View style={styles.dateRow}>
-              <Feather name="calendar" size={14} color="rgba(255,255,255,0.9)" style={styles.dateIcon} />
-              <Text style={styles.date}>
-                {formatDate(item.startDate)} - {formatDate(item.endDate)}
-              </Text>
-            </View>
-            <View style={styles.daysContainer}>
-              <Text style={styles.daysText}>{daysMessage}</Text>
+            
+            <View style={styles.info}>
+              <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
+              <View style={styles.locationContainer}>
+                <Feather name="map-pin" size={14} color={COLORS.gray} style={styles.locationIcon} />
+                <Text style={styles.destination}>{item.destination}</Text>
+              </View>
+              <View style={styles.dateContainer}>
+                <Feather name="calendar" size={14} color={COLORS.gray} style={styles.dateIcon} />
+                <Text style={styles.date}>
+                  {formatDate(item.startDate)} - {formatDate(item.endDate)}
+                </Text>
+              </View>
+              <Text style={styles.duration}>{getDaysMessage(item.startDate, item.endDate)}</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -324,6 +258,19 @@ export default function TripsScreen() {
     </View>
   );
 
+  const handleProfilePress = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogout = () => {
+    signOut();
+    setShowLogoutModal(false);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Auth' }],
+    });
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar
@@ -332,49 +279,45 @@ export default function TripsScreen() {
         translucent={true}
       />
       
-      {/* Animated Header */}
-      <AnimatedHeader
-        scrollY={scrollY}
-        title="My Adventures"
-        subtitle={formattedDate}
-        onProfilePress={() => {
-          // Handle profile navigation
-        }}
-      />
+      <View style={styles.headerWrapper}>
+        {/* Animated Header */}
+        <AnimatedHeader
+          scrollY={scrollY}
+          title="My Adventures"
+          subtitle={formattedDate}
+          onProfilePress={handleProfilePress}
+        />
 
-      {/* Search Bar (Animated) */}
-      <Animated.View 
-        style={[
-          styles.searchContainer,
-          { 
-            top: HEADER_CONFIG.MIN_HEIGHT,
-            opacity: searchVisible ? 1 : 0,
-            transform: [{ 
-              translateY: searchVisible ? 0 : -50 
-            }]
-          }
-        ]}
-      >
-        <View style={styles.searchInputContainer}>
-          <Feather name="search" size={18} color={COLORS.gray} style={styles.searchIcon} />
-          <TextInput
-            ref={searchInputRef}
-            style={styles.searchInput}
-            placeholder="Search your trips..."
-            placeholderTextColor={COLORS.gray}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery !== "" && (
-            <TouchableOpacity
-              onPress={() => setSearchQuery("")}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Feather name="x" size={18} color={COLORS.gray} />
+        {/* Search Bar (Always Visible) */}
+        <Animated.View 
+          style={[
+            styles.searchContainer,
+            {
+              transform: [{
+                translateY: scrollY.interpolate({
+                  inputRange: [0, HEADER_CONFIG.MAX_HEIGHT - HEADER_CONFIG.MIN_HEIGHT],
+                  outputRange: [HEADER_CONFIG.MAX_HEIGHT, HEADER_CONFIG.MIN_HEIGHT],
+                  extrapolate: 'clamp'
+                })
+              }]
+            }
+          ]}
+        >
+          <View style={styles.searchInputContainer}>
+            <TextInput
+              ref={searchInputRef}
+              style={styles.searchInput}
+              placeholder="Search your recent trips"
+              placeholderTextColor={COLORS.gray}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <Feather name="search" size={20} color={COLORS.gray} />
             </TouchableOpacity>
-          )}
-        </View>
-      </Animated.View>
+          </View>
+        </Animated.View>
+      </View>
 
       {/* Main Content */}
       {filteredTrips.length > 0 ? (
@@ -385,9 +328,7 @@ export default function TripsScreen() {
           renderSectionHeader={renderSectionHeader}
           contentContainerStyle={[
             styles.listContent,
-            { 
-              paddingTop: HEADER_CONFIG.MAX_HEIGHT + (searchVisible ? 70 : 0)
-            }
+            { paddingTop: HEADER_CONFIG.MAX_HEIGHT + 60 }
           ]}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -400,9 +341,7 @@ export default function TripsScreen() {
         <Animated.ScrollView
           contentContainerStyle={[
             styles.emptyScrollContent,
-            { 
-              paddingTop: HEADER_CONFIG.MAX_HEIGHT + (searchVisible ? 70 : 0)
-            }
+            { paddingTop: HEADER_CONFIG.MAX_HEIGHT + 60 }
           ]}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -414,19 +353,8 @@ export default function TripsScreen() {
         </Animated.ScrollView>
       )}
 
-      {/* Floating Action Buttons */}
+      {/* Floating Action Button (only Add button now) */}
       <View style={styles.floatingButtonsContainer}>
-        <TouchableOpacity 
-          style={[styles.floatingButton, styles.searchButton]}
-          onPress={handleSearchToggle}
-        >
-          <Feather 
-            name={searchVisible ? "x" : "search"} 
-            size={22} 
-            color={COLORS.white} 
-          />
-        </TouchableOpacity>
-        
         <TouchableOpacity 
           style={[styles.floatingButton, styles.addButton]}
           onPress={handleAddTrip}
@@ -440,6 +368,12 @@ export default function TripsScreen() {
         onClose={() => setModalVisible(false)}
         onConfirm={handleConfirmDates}
       />
+
+      <LogoutModal
+        visible={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onLogout={handleLogout}
+      />
     </View>
   );
 }
@@ -448,6 +382,41 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  headerWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+  },
+  searchContainer: {
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 99,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontFamily: FONTS.regular,
+    fontSize: FONT_SIZES.body1,
+    color: COLORS.text,
+    marginRight: 8,
+    padding: 0,
   },
   listContent: {
     paddingHorizontal: 16,
@@ -458,143 +427,84 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   heading: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.h2,
     fontFamily: FONTS.bold,
     color: COLORS.text,
     marginBottom: 16,
   },
-  searchContainer: {
-    position: 'absolute',
-    zIndex: 99,
-    width: '100%',
-    paddingHorizontal: 16,
-    elevation:6,
-    shadowColor:'#000',
-    shadowOffset: { width: 0, height: 3 }, 
-    shadowOpacity: 0.2, 
-    shadowRadius: 4, 
-  },
-  searchInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.white,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontFamily: FONTS.regular,
-    fontSize: 15,
-    color: COLORS.text,
-  },
   card: {
     marginBottom: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
+    borderRadius: 16,
     backgroundColor: COLORS.white,
-    elevation: 4,
+    elevation: 3,
     shadowColor: COLORS.text,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 6,
-    height: 220,
+    shadowRadius: 4,
+    padding: 12,
   },
-  cardHeader: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    right: 12,
+  cardContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    zIndex: 2,
+    height: 100,
   },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-  statusBadgeText: {
-    color: COLORS.white,
-    fontSize: 12,
-    fontFamily: FONTS.medium,
-  },
-  optionsButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  imageContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginRight: 12,
   },
   image: {
     width: '100%',
     height: '100%',
-  },
-  gradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: '60%',
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    resizeMode: 'cover',
   },
   info: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
-  },
-  destination: {
-    fontFamily: FONTS.bold,
-    fontSize: 22,
-    color: COLORS.white,
-    marginBottom: 1,
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    flex: 1,
+    justifyContent: 'center',
+    gap: 1,
   },
   title: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.semiBold,
-    color: 'rgba(255,255,255,0.9)',
+    color: COLORS.text,
     marginBottom: 2,
   },
-  dateRow: {
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  locationIcon: {
+    marginRight: 4,
+  },
+  destination: {
+    fontSize: FONT_SIZES.body2,
+    fontFamily: FONTS.regular,
+    color: COLORS.textSecondary,
+  },
+  dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 2,
   },
   dateIcon: {
-    marginRight: 6,
+    marginRight: 4,
   },
   date: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body3,
     fontFamily: FONTS.regular,
-    color: 'rgba(255,255,255,0.9)',
+    color: COLORS.textSecondary,
   },
-  daysContainer: {
-    marginTop: 2,
-  },
-  daysText: {
-    fontSize: 13,
-    fontFamily: FONTS.medium,
-    color: 'rgba(255,255,255,0.85)',
+  duration: {
+    fontSize: FONT_SIZES.caption,
+    fontFamily: FONTS.regular,
+    color: COLORS.textSecondary,
   },
   floatingButtonsContainer: {
     position: 'absolute',
     bottom: 24,
     right: 16,
-    alignItems: 'center',
   },
   floatingButton: {
     width: 56,
@@ -607,10 +517,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    marginTop: 16,
-  },
-  searchButton: {
-    backgroundColor: COLORS.secondary,
   },
   addButton: {
     backgroundColor: COLORS.primary,
@@ -623,14 +529,14 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontFamily: FONTS.semiBold,
-    fontSize: 18,
+    fontSize: FONT_SIZES.h4,
     color: COLORS.text,
     marginTop: 16,
     textAlign: 'center',
   },
   emptySubText: {
     fontFamily: FONTS.regular,
-    fontSize: 15,
+    fontSize: FONT_SIZES.body2,
     color: COLORS.gray,
     marginTop: 8,
     textAlign: 'center',
@@ -644,7 +550,7 @@ const styles = StyleSheet.create({
   },
   emptyAddButtonText: {
     color: COLORS.white,
-    fontSize: 16,
+    fontSize: FONT_SIZES.button,
     fontFamily: FONTS.medium,
   },
   sectionHeader: {
@@ -662,13 +568,13 @@ const styles = StyleSheet.create({
   },
   sectionHeaderText: {
     fontFamily: FONTS.semiBold,
-    fontSize: 18,
+    fontSize: FONT_SIZES.h4,
     color: COLORS.text,
     flex: 1,
   },
   sectionCount: {
     fontFamily: FONTS.medium,
-    fontSize: 16,
+    fontSize: FONT_SIZES.body1,
     color: COLORS.primary,
     paddingHorizontal: 8,
     paddingVertical: 4,

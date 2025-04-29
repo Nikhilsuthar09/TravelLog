@@ -1,4 +1,4 @@
-import { COLORS, FONTS } from "@constants/theme";
+import { COLORS, FONTS, FONT_SIZES } from "@constants/theme";
 import { Feather } from "@expo/vector-icons";
 import { ItineraryActivity, ItineraryDay } from "@types";
 import { useState } from "react";
@@ -106,12 +106,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   dayTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.h4,
     fontFamily: FONTS.bold,
     color: COLORS.text,
   },
   activityCount: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.regular,
     color: COLORS.textSecondary,
     marginTop: 4,
@@ -131,6 +131,7 @@ const styles = StyleSheet.create({
   addActivityText: {
     color: COLORS.white,
     fontFamily: FONTS.medium,
+    fontSize: FONT_SIZES.button,
     marginLeft: 8,
   },
 }); 

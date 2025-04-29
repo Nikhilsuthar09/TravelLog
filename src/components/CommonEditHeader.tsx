@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { COLORS, FONTS } from "@constants/theme";
+import { COLORS, FONTS, FONT_SIZES } from "@constants/theme";
 import { Feather } from "@expo/vector-icons";
 
 interface CommonEditHeaderProps {
@@ -42,7 +42,7 @@ const CommonEditHeader: React.FC<CommonEditHeaderProps> = ({
         style={[
           StyleSheet.absoluteFill,
           {
-            backgroundColor: 'rgba(0,0,0,0.2)',
+            backgroundColor: 'rgba(0,0,0,0.1)',
           }
         ]}
       />
@@ -137,13 +137,13 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   greeting: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.h2,
     fontFamily: FONTS.bold,
     color: COLORS.white,
   },
   saveButtonText: {
     color: COLORS.primary,
-    fontSize: 16,
+    fontSize: FONT_SIZES.button,
     fontFamily: FONTS.medium,
   },
 });

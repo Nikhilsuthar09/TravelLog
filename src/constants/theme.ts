@@ -28,4 +28,27 @@ const FONTS = {
   semiBold: "Poppins-SemiBold",
 };
 
-export { COLORS, FONTS };
+const FONT_SIZES = {
+  // Display sizes
+  h1: 32,
+  h2: 24,
+  h3: 20,
+  h4: 18,
+  
+  // Body text sizes
+  body1: 16,
+  body2: 14,
+  body3: 13,
+  
+  // Small text sizes
+  caption: 12,
+  small: 11,
+  tiny: 10,
+
+  // Special sizes
+  button: 16,
+  input: 16,
+  label: 14,
+};
+
+export { COLORS, FONTS, FONT_SIZES };

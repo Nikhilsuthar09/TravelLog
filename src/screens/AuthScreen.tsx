@@ -1,233 +1,271 @@
-import { COLORS, FONTS } from "@constants/theme";
+import { COLORS, FONTS, FONT_SIZES } from "@constants/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import { ActivityIndicator, Alert, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
+import { useAuth } from "../context/AuthContext";
 
 interface AuthProps{
   navigation:any;
 }
 
 export default function AuthScreen({navigation}:AuthProps){
+  const { signIn, signUp } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('')
-  const [username, setusername] = useState('')
+  const [fullName, setFullName] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleAuth = async () => {
     Keyboard.dismiss();
-  
 
-  // input validation
-  if(!email.trim()){
-    Alert.alert('Error', 'Please enter your email');
-    return;
-  }
-  if(!password.trim()){
-    Alert.alert('Error', 'Please enter your password');
-    return;
-  }
-
-  if(!isLogin){
-    if(!username.trim()){
-      Alert.alert('Error', 'Please enter a username');
+    // input validation
+    if(!email.trim()){
+      Alert.alert('Error', 'Please enter your email');
       return;
     }
-    if(password !== confirmPassword){
-      Alert.alert('Error', 'Passwords do not match')
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
-  }
-  setLoading(true);
 
-  try{
-    // simulate api delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    // store Logged in state
-    await AsyncStorage.setItem('userLoggedIn', 'true');
+    if(!password.trim()){
+      Alert.alert('Error', 'Please enter your password');
+      return;
+    }
 
-    // store user info
-    const userData = {
-      email,
-      username: isLogin ? 'Nikhil' : username,
-    };
-    await AsyncStorage.setItem('userData', JSON.stringify(userData));
+    if(!isLogin){
+      if(!fullName.trim()){
+        Alert.alert('Error', 'Please enter your full name');
+        return;
+      }
+      if(password !== confirmPassword){
+        Alert.alert('Error', 'Passwords do not match')
+        return;
+      }
+      // Password strength validation for sign up
+      if (password.length < 6) {
+        Alert.alert('Error', 'Password must be at least 6 characters long');
+        return;
+      }
+      if (!/[A-Z]/.test(password)) {
+        Alert.alert('Error', 'Password must contain at least one uppercase letter');
+        return;
+      }
+      if (!/[0-9]/.test(password)) {
+        Alert.alert('Error', 'Password must contain at least one number');
+        return;
+      }
+    }
 
-    // Navigate to home screen
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Tabs' }],
-    });
+    setLoading(true);
 
+    try{
+      if (isLogin) {
+        await signIn(email, password);
+      } else {
+        await signUp(email, password, fullName);
+      }
+
+      // Navigate to home screen
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Tabs' }],
+      });
+
+    }
+    catch(error: any){
+      let errorMessage = 'Authentication failed. Please try again';
+      
+      // Handle specific Firebase error messages
+      if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Please enter a valid email address';
+      } else if (error.code === 'auth/user-not-found') {
+        errorMessage = 'No account found with this email';
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = 'Incorrect password. Please try again';
+      } else if (error.code === 'auth/invalid-credential') {
+        errorMessage = 'Incorrect email or password. Please check your credentials and try again';
+      } else if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'This email is already registered. Please try logging in';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'Password should be at least 6 characters and contain a mix of letters and numbers';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many failed attempts. Please try again later';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your internet connection';
+      }
+      
+      Alert.alert('Authentication Error', errorMessage);
+    }
+    finally{
+      setLoading(false);
+    }
   }
-  catch(error){
-    console.error('Authentication error: ', error);
-    Alert.alert('Error', 'Authentication failed. Please try again');
-  }
-  finally{
-    setLoading(false);
-  }
-}
-const toggleAuthMode = () => {
-  setIsLogin(!isLogin);
-  // clear fields when switching modes
-  setPassword('')
-  setConfirmPassword('');
-};
-const handleSocialAuth = (platform: string) => {
-  Alert.alert('Social Login', `${platform} TODO`)
-};
-return (
-  <TouchableWithoutFeedback
-  onPress={Keyboard.dismiss}>
-    <View
-    style={styles.container}
-    >
-      <LinearGradient
-      colors={[COLORS.primary, COLORS.secondary]}
-      style={styles.gradient}
+
+  const toggleAuthMode = () => {
+    setIsLogin(!isLogin);
+    // clear fields when switching modes
+    setPassword('')
+    setConfirmPassword('');
+  };
+
+  const handleSocialAuth = (platform: string) => {
+    Alert.alert('Social Login', `${platform} TODO`)
+  };
+
+  return (
+    <TouchableWithoutFeedback
+    onPress={Keyboard.dismiss}>
+      <View
+      style={styles.container}
       >
-        <Text
-        style={styles.welcomeText}
+        <LinearGradient
+        colors={[COLORS.primary, COLORS.secondary]}
+        style={styles.gradient}
         >
-          Welcome!
-        </Text>
-      </LinearGradient>
-      <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.formContainer}
-      >
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-          style={[styles.tabButton, isLogin && styles.activeTab]}
-          onPress={()=> setIsLogin(true)}
+          <Text
+          style={styles.welcomeText}
           >
-            <Text style={[
-              styles.tabText,
-              isLogin ? styles.activeTabText : styles.inactiveTabText,
-              ]}>
-                Login
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-          style={[styles.tabButton, !isLogin && styles.activeTab]}
-          onPress={() => setIsLogin(false)}
-          >
-            <Text style={[
-              styles.tabText, 
-              !isLogin ? styles.activeTabText : styles.inactiveTabText
-              ]}>
-                Sign Up
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.inputContainer}>
-          <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor='#AAAAAA'
-          keyboardType="email-address"
-          autoCapitalize="none"
-          value={email}
-          onChangeText={setEmail}
-          />
-          {
-            !isLogin && (
-              <TextInput
-              style={styles.input}
-              placeholder="username"
-              placeholderTextColor="#AAAAAA"
-              autoCapitalize="none"
-              value={username}
-              onChangeText={setusername}
-              />
-            )
-          }
-          <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#AAAAAA"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-          />
-          {!isLogin && (
+            Welcome!
+          </Text>
+        </LinearGradient>
+        <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.formContainer}
+        >
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+            style={[styles.tabButton, isLogin && styles.activeTab]}
+            onPress={()=> setIsLogin(true)}
+            >
+              <Text style={[
+                styles.tabText,
+                isLogin ? styles.activeTabText : styles.inactiveTabText,
+                ]}>
+                  Login
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+            style={[styles.tabButton, !isLogin && styles.activeTab]}
+            onPress={() => setIsLogin(false)}
+            >
+              <Text style={[
+                styles.tabText, 
+                !isLogin ? styles.activeTabText : styles.inactiveTabText
+                ]}>
+                  Sign Up
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.inputContainer}>
             <TextInput
             style={styles.input}
-            placeholder="Retype Password"
+            placeholder="Email"
+            placeholderTextColor='#AAAAAA'
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+            />
+            {!isLogin && (
+              <TextInput
+              style={styles.input}
+              placeholder="Full Name"
+              placeholderTextColor="#AAAAAA"
+              autoCapitalize="words"
+              value={fullName}
+              onChangeText={setFullName}
+              />
+            )}
+            <TextInput
+            style={styles.input}
+            placeholder="Password"
             placeholderTextColor="#AAAAAA"
             secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
+            value={password}
+            onChangeText={setPassword}
             />
-          )}
-        </View>
-        {isLogin && (
-          <View style={styles.forgotContainer}>
-            <TouchableOpacity onPress={() => Alert.alert('Password Recovery', 'TODO')}>
-              <Text style={styles.forgotText}> Forgot Text </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setIsLogin(false)}>
-              <Text style={styles.createText}> Create Account </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-        {!isLogin && (
-          <View style={styles.alreadyUserContainer}>
-            <TouchableOpacity onPress={() => setIsLogin(true)}>
-              <Text style={styles.alreadyUserText}>Already User</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-        <TouchableOpacity
-            style={styles.authButton}
-            onPress={handleAuth}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color={COLORS.white} />
-            ) : (
-              <Text style={styles.authButtonText}>
-                {isLogin ? 'Login' : 'Sign Up'}
-              </Text>
+            {!isLogin && (
+              <TextInput
+              style={styles.input}
+              placeholder="Retype Password"
+              placeholderTextColor="#AAAAAA"
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              />
             )}
-          </TouchableOpacity>
-          <View style={styles.socialContainer}>
-            <TouchableOpacity 
-              style={styles.socialButton}
-              onPress={() => handleSocialAuth('Google')}
-            >
-              <View style={styles.socialIconContainer}>
-                <Text style={styles.socialIconText}>G</Text>
-              </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.socialButton}
-              onPress={() => handleSocialAuth('Facebook')}
-            >
-              <View style={styles.socialIconContainer}>
-                <Text style={styles.socialIconText}>f</Text>
-              </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.socialButton}
-              onPress={() => handleSocialAuth('Twitter')}
-            >
-              <View style={styles.socialIconContainer}>
-                <Text style={styles.socialIconText}>t</Text>
-              </View>
-            </TouchableOpacity>
           </View>
-      </KeyboardAvoidingView>
-    </View>
-  </TouchableWithoutFeedback>
-)
- 
+          {isLogin && (
+            <View style={styles.forgotContainer}>
+              <TouchableOpacity onPress={() => Alert.alert('Password Recovery', 'TODO')}>
+                <Text style={styles.forgotText}> Forgot Text </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setIsLogin(false)}>
+                <Text style={styles.createText}> Create Account </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          {!isLogin && (
+            <View style={styles.alreadyUserContainer}>
+              <TouchableOpacity onPress={() => setIsLogin(true)}>
+                <Text style={styles.alreadyUserText}>Already User</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          <TouchableOpacity
+              style={styles.authButton}
+              onPress={handleAuth}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color={COLORS.white} />
+              ) : (
+                <Text style={styles.authButtonText}>
+                  {isLogin ? 'Login' : 'Sign Up'}
+                </Text>
+              )}
+            </TouchableOpacity>
+            <View style={styles.socialContainer}>
+              <TouchableOpacity 
+                style={styles.socialButton}
+                onPress={() => handleSocialAuth('Google')}
+              >
+                <View style={styles.socialIconContainer}>
+                  <Text style={styles.socialIconText}>G</Text>
+                </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.socialButton}
+                onPress={() => handleSocialAuth('Facebook')}
+              >
+                <View style={styles.socialIconContainer}>
+                  <Text style={styles.socialIconText}>f</Text>
+                </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.socialButton}
+                onPress={() => handleSocialAuth('Twitter')}
+              >
+                <View style={styles.socialIconContainer}>
+                  <Text style={styles.socialIconText}>t</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+        </KeyboardAvoidingView>
+      </View>
+    </TouchableWithoutFeedback>
+  )
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -240,7 +278,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   welcomeText: {
-    fontSize: 30,
+    fontSize: FONT_SIZES.h1,
     fontFamily: FONTS.bold,
     color: COLORS.white,
   },
@@ -263,7 +301,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabText: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.medium,
   },
   activeTab: {
@@ -281,14 +319,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   input: {
-    backgroundColor: COLORS.background,
-    borderRadius: 25,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginBottom: 15,
-    fontSize: 16,
+    fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.regular,
     color: COLORS.text,
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    marginBottom: 15,
   },
   forgotContainer: {
     flexDirection: 'row',
@@ -298,12 +335,12 @@ const styles = StyleSheet.create({
   forgotText: {
     color: COLORS.gray,
     fontFamily: FONTS.medium,
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
   },
   createText: {
     color: COLORS.gray,
     fontFamily: FONTS.medium,
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
   },
   alreadyUserContainer: {
     alignItems: 'flex-end',
@@ -312,7 +349,7 @@ const styles = StyleSheet.create({
   alreadyUserText: {
     color: COLORS.gray,
     fontFamily: FONTS.medium,
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
   },
   authButton: {
     backgroundColor: COLORS.primary,
@@ -328,7 +365,7 @@ const styles = StyleSheet.create({
   },
   authButtonText: {
     color: COLORS.white,
-    fontSize: 18,
+    fontSize: FONT_SIZES.h4,
     fontFamily: FONTS.semiBold,
   },
   socialContainer: {
@@ -355,8 +392,42 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   socialIconText: {
-    fontSize: 20,
+    fontSize: FONT_SIZES.h3,
     fontFamily: FONTS.bold,
     color: COLORS.primary,
+  },
+  appTitle: {
+    fontSize: FONT_SIZES.h1,
+    fontFamily: FONTS.bold,
+    color: COLORS.white,
+    marginBottom: 8,
+  },
+  switchButton: {
+    fontSize: FONT_SIZES.h4,
+    fontFamily: FONTS.semiBold,
+    color: COLORS.primary,
+  },
+  errorText: {
+    fontSize: FONT_SIZES.h3,
+    fontFamily: FONTS.medium,
+    color: COLORS.danger,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  authInput: {
+    fontSize: FONT_SIZES.body1,
+    fontFamily: FONTS.regular,
+    color: COLORS.text,
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    marginBottom: 15,
+  },
+  errorMessage: {
+    fontSize: FONT_SIZES.h3,
+    fontFamily: FONTS.medium,
+    color: COLORS.danger,
+    textAlign: 'center',
+    marginBottom: 16,
   },
 })

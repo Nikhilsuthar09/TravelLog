@@ -1,5 +1,5 @@
 // src/screens/HomeScreen.tsx
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -10,15 +10,20 @@ import {
   StatusBar,
   Dimensions,
   Animated,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
-import { COLORS, FONTS } from "@constants/theme";
-import { useTrip } from "context/TripContext";
+import { COLORS, FONTS, FONT_SIZES } from "@constants/theme";
+import { useTrip } from "@context/TripContext";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "navigation/AppNavigator";
+import { RootStackParamList } from "@navigation/AppNavigator";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { Trip } from "@types";
 import AnimatedHeader, { HEADER_CONFIG } from "../components/AnimatedHeader";
+import LogoutModal from '../components/LogoutModal';
+import { useAuth } from '@context/AuthContext';
+import * as Haptics from 'expo-haptics';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -29,6 +34,10 @@ export default function HomeScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { trips } = useTrip();
   const scrollY = useRef(new Animated.Value(0)).current;
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { signOut, user } = useAuth();
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const [showTooltip, setShowTooltip] = useState(true);
 
   // get current date
   const today = new Date();
@@ -95,7 +104,79 @@ export default function HomeScreen() {
   };
 
   const handleProfilePress = () => {
-    // Handle profile button press
+    setShowLogoutModal(true);
+  };
+
+  const handleLogout = () => {
+    signOut();
+    setShowLogoutModal(false);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Auth' }],
+    });
+  };
+
+  const handleQuickAction = async (action: string) => {
+    // Add haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    setLoadingAction(action);
+    
+    try {
+      switch (action) {
+        case 'add':
+          handleAddTrip();
+          break;
+        case 'trips':
+          handleNavigateTotrips();
+          break;
+        case 'packing':
+          handleNavigateToPacking();
+          break;
+        case 'weather':
+          if (upcomingTrip) {
+            navigation.navigate("TripDetails", {
+              id: upcomingTrip.id,
+              title: upcomingTrip.title,
+              destination: upcomingTrip.destination,
+              startDate: upcomingTrip.startDate,
+              endDate: upcomingTrip.endDate,
+              imageUri: upcomingTrip.imageUri ?? "",
+            });
+          }
+          break;
+        case 'notes':
+          if (upcomingTrip) {
+            navigation.navigate("TripDetails", {
+              id: upcomingTrip.id,
+              title: upcomingTrip.title,
+              destination: upcomingTrip.destination,
+              startDate: upcomingTrip.startDate,
+              endDate: upcomingTrip.endDate,
+              imageUri: upcomingTrip.imageUri ?? "",
+            });
+          }
+          break;
+        case 'share':
+          if (upcomingTrip) {
+            Alert.alert(
+              "Share Trip",
+              "Share your trip details with friends and family",
+              [
+                { text: "Cancel", style: "cancel" },
+                { text: "Share", onPress: () => {
+                  // Implement sharing logic
+                }}
+              ]
+            );
+          }
+          break;
+      }
+    } catch (error) {
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setLoadingAction(null);
+    }
   };
 
   return (
@@ -109,7 +190,7 @@ export default function HomeScreen() {
       {/* Using our new AnimatedHeader component */}
       <AnimatedHeader
         scrollY={scrollY}
-        title="Welcome, Nikhil!"
+        title={`Welcome, ${user?.displayName || 'User'}!`}
         subtitle={formattedDate}
         onProfilePress={handleProfilePress}
       />
@@ -218,43 +299,117 @@ export default function HomeScreen() {
 
           {/* Quick Actions */}
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Quick Actions</Text>
+              {showTooltip && (
+                <TouchableOpacity 
+                  onPress={() => setShowTooltip(false)}
+                  style={styles.tooltipButton}
+                >
+                  <Feather name="info" size={16} color={COLORS.primary} />
+                </TouchableOpacity>
+              )}
+            </View>
+            {showTooltip && (
+              <Text style={styles.tooltipText}>
+                Tap any action to quickly access common features
+              </Text>
+            )}
             <View style={styles.quickActionsContainer}>
               <TouchableOpacity
                 style={[styles.quickActionButton, styles.cardShadow]}
-                onPress={handleAddTrip}
+                onPress={() => handleQuickAction('add')}
                 activeOpacity={0.8}
+                disabled={loadingAction === 'add'}
               >
                 <View style={styles.actionIconContainer}>
-                  <Feather name="plus" size={24} color={COLORS.primary} />
+                  {loadingAction === 'add' ? (
+                    <ActivityIndicator color={COLORS.primary} />
+                  ) : (
+                    <Feather name="plus" size={20} color={COLORS.primary} />
+                  )}
                 </View>
                 <Text style={styles.actionText}>Add Trip</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.quickActionButton, styles.cardShadow]}
-                onPress={handleNavigateTotrips}
+                onPress={() => handleQuickAction('trips')}
                 activeOpacity={0.8}
+                disabled={loadingAction === 'trips'}
               >
                 <View style={styles.actionIconContainer}>
-                  <Feather name="map" size={24} color={COLORS.primary} />
+                  {loadingAction === 'trips' ? (
+                    <ActivityIndicator color={COLORS.primary} />
+                  ) : (
+                    <Feather name="map" size={20} color={COLORS.primary} />
+                  )}
                 </View>
                 <Text style={styles.actionText}>My Trips</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.quickActionButton, styles.cardShadow]}
-                onPress={handleNavigateToPacking}
+                onPress={() => handleQuickAction('packing')}
                 activeOpacity={0.8}
+                disabled={loadingAction === 'packing'}
               >
                 <View style={styles.actionIconContainer}>
-                  <Feather
-                    name="check-square"
-                    size={24}
-                    color={COLORS.primary}
-                  />
+                  {loadingAction === 'packing' ? (
+                    <ActivityIndicator color={COLORS.primary} />
+                  ) : (
+                    <Feather name="check-square" size={20} color={COLORS.primary} />
+                  )}
                 </View>
-                <Text style={styles.actionText}>Packing List</Text>
+                <Text style={styles.actionText}>Packing</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.quickActionButton, styles.cardShadow]}
+                onPress={() => handleQuickAction('weather')}
+                activeOpacity={0.8}
+                disabled={loadingAction === 'weather' || !upcomingTrip}
+              >
+                <View style={styles.actionIconContainer}>
+                  {loadingAction === 'weather' ? (
+                    <ActivityIndicator color={COLORS.primary} />
+                  ) : (
+                    <Feather name="cloud" size={20} color={COLORS.primary} />
+                  )}
+                </View>
+                <Text style={styles.actionText}>Weather</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.quickActionButton, styles.cardShadow]}
+                onPress={() => handleQuickAction('notes')}
+                activeOpacity={0.8}
+                disabled={loadingAction === 'notes' || !upcomingTrip}
+              >
+                <View style={styles.actionIconContainer}>
+                  {loadingAction === 'notes' ? (
+                    <ActivityIndicator color={COLORS.primary} />
+                  ) : (
+                    <Feather name="edit-2" size={20} color={COLORS.primary} />
+                  )}
+                </View>
+                <Text style={styles.actionText}>Notes</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.quickActionButton, styles.cardShadow]}
+                onPress={() => handleQuickAction('share')}
+                activeOpacity={0.8}
+                disabled={loadingAction === 'share' || !upcomingTrip}
+              >
+                <View style={styles.actionIconContainer}>
+                  {loadingAction === 'share' ? (
+                    <ActivityIndicator color={COLORS.primary} />
+                  ) : (
+                    <Feather name="share-2" size={20} color={COLORS.primary} />
+                  )}
+                </View>
+                <Text style={styles.actionText}>Share</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -323,6 +478,12 @@ export default function HomeScreen() {
           <View style={{ height: 20 }} />
         </View>
       </Animated.ScrollView>
+      
+      <LogoutModal
+        visible={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onLogout={handleLogout}
+      />
     </View>
   );
 }
@@ -357,12 +518,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   statusNumber: {
-    fontSize: 22,
+    fontSize: FONT_SIZES.h3,
     fontFamily: FONTS.bold,
     color: COLORS.primary,
   },
   statusLabel: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.regular,
     color: COLORS.textSecondary,
     marginTop: 4,
@@ -377,19 +538,19 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.h4,
     fontFamily: FONTS.semiBold,
     color: COLORS.text,
     marginBottom: 12,
   },
   seeAllText: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.medium,
     color: COLORS.primary,
   },
@@ -425,7 +586,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   destinationText: {
-    fontSize: 20,
+    fontSize: FONT_SIZES.h3,
     fontFamily: FONTS.bold,
     color: COLORS.white,
   },
@@ -438,7 +599,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   tripDateText: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.medium,
     color: COLORS.white,
   },
@@ -454,7 +615,7 @@ const styles = StyleSheet.create({
   },
   countdownText: {
     color: COLORS.white,
-    fontSize: 12,
+    fontSize: FONT_SIZES.caption,
     fontFamily: FONTS.medium,
   },
   addTripButton: {
@@ -468,37 +629,53 @@ const styles = StyleSheet.create({
   },
   addTripText: {
     marginTop: 8,
-    fontSize: 16,
+    fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.medium,
     color: COLORS.primary,
   },
+  tooltipButton: {
+    padding: 4,
+  },
+  tooltipText: {
+    fontSize: FONT_SIZES.caption,
+    fontFamily: FONTS.regular,
+    color: COLORS.textSecondary,
+    marginBottom: 12,
+  },
   quickActionsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
   },
   quickActionButton: {
-    flex: 1,
-    height: 100,
+    width: '30%',
+    height: 90,
     borderRadius: 12,
-    padding: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: 4,
+    padding: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   actionIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: COLORS.primaryLight,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 8,
   },
   actionText: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.medium,
     color: COLORS.text,
-    textAlign: "center",
+    textAlign: 'center',
   },
   recentTripsScroll: {
     paddingLeft: 2,
@@ -521,12 +698,12 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   recentTripTitle: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.medium,
     color: COLORS.text,
   },
   recentTripDate: {
-    fontSize: 12,
+    fontSize: FONT_SIZES.caption,
     fontFamily: FONTS.regular,
     color: COLORS.textSecondary,
     marginTop: 2,

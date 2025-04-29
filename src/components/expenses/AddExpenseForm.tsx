@@ -1,4 +1,4 @@
-import { COLORS, FONTS } from "@constants/theme";
+import { COLORS, FONTS, FONT_SIZES } from "@constants/theme";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { useState } from "react";
 
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   categoryText: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.medium,
     color: COLORS.text,
   },
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 8,
     padding: 12,
-    fontSize: 16,
+    fontSize: FONT_SIZES.input,
     fontFamily: FONTS.regular,
     color: COLORS.text,
   },
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 8,
     padding: 12,
-    fontSize: 16,
+    fontSize: FONT_SIZES.input,
     fontFamily: FONTS.regular,
     color: COLORS.text,
   },
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.lightGray,
   },
   addButtonText: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.button,
     fontFamily: FONTS.medium,
     color: COLORS.white,
   },

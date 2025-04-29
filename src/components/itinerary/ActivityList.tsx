@@ -1,4 +1,4 @@
-import { COLORS, FONTS } from "@constants/theme";
+import { COLORS, FONTS, FONT_SIZES } from "@constants/theme";
 import { Feather } from "@expo/vector-icons";
 import { ItineraryActivity } from "@types";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   activityTitle: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.bold,
     color: COLORS.text,
     marginBottom: 4,
@@ -166,12 +166,12 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: COLORS.white,
-    fontSize: 12,
+    fontSize: FONT_SIZES.caption,
     fontFamily: FONTS.medium,
   },
   priorityText: {
     color: COLORS.white,
-    fontSize: 12,
+    fontSize: FONT_SIZES.caption,
     fontFamily: FONTS.medium,
   },
   activityActions: {
@@ -190,14 +190,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   detailText: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.regular,
     color: COLORS.text,
   },
   description: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.regular,
     color: COLORS.text,
-    marginTop: 4,
   },
 }); 

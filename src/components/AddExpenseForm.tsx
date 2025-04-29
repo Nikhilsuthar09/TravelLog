@@ -1,143 +1,241 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
-import { COLORS, FONTS } from '@constants/theme';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Alert } from 'react-native';
+import { COLORS, FONTS, FONT_SIZES } from '../constants/theme';
+import { Feather } from '@expo/vector-icons';
 
-interface AddExpenseFormProps {
-  onAddExpense: (expense: { category: string; amount: number; description: string }) => void;
+export interface AddExpenseFormProps {
+  onAddExpense: (expense: { category: string; amount: string; description: string }) => void;
+  categories: string[];
+  initialExpense?: {
+    id: string;
+    category: string;
+    amount: number;
+    description: string;
+  } | null;
+  onModalClose: () => void;
 }
 
-const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onAddExpense }) => {
+export default function AddExpenseForm({ onAddExpense, categories, initialExpense, onModalClose }: AddExpenseFormProps) {
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [category, setCategory] = useState(categories[0] || '');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Food');
-  const [categories] = useState(['Food', 'Transport', 'Accommodation', 'Shopping', 'Entertainment', 'Other']);
 
-  const handleAddExpense = () => {
+  useEffect(() => {
+    if (initialExpense) {
+      setCategory(initialExpense.category);
+      setAmount(initialExpense.amount.toString());
+      setDescription(initialExpense.description);
+      setIsModalVisible(true);
+    }
+  }, [initialExpense]);
+
+  const handleAdd = () => {
     if (!amount || parseFloat(amount) <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid amount');
+      Alert.alert('Invalid Amount', 'Please enter a valid expense amount');
       return;
     }
 
     onAddExpense({
-      category: selectedCategory,
-      amount: parseFloat(amount),
-      description: description || selectedCategory,
+      category,
+      amount,
+      description: description || category,
     });
 
     // Reset form
     setAmount('');
     setDescription('');
+    setIsModalVisible(false);
+    onModalClose();
+  };
+
+  const handleClose = () => {
+    setIsModalVisible(false);
+    onModalClose();
+    if (initialExpense) {
+      setAmount('');
+      setDescription('');
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Add New Expense</Text>
-      
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoryContainer}
+    <>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => setIsModalVisible(true)}
       >
-        {categories.map((category) => (
-          <TouchableOpacity
-            key={category}
-            style={[
-              styles.categoryButton,
-              selectedCategory === category && styles.selectedCategoryButton,
-            ]}
-            onPress={() => setSelectedCategory(category)}
-          >
-            <Text
-              style={[
-                styles.categoryText,
-                selectedCategory === category && styles.selectedCategoryText,
-              ]}
-            >
-              {category}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Amount"
-        value={amount}
-        onChangeText={setAmount}
-        keyboardType="numeric"
-        placeholderTextColor={COLORS.textSecondary}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Description (optional)"
-        value={description}
-        onChangeText={setDescription}
-        placeholderTextColor={COLORS.textSecondary}
-      />
-
-      <TouchableOpacity style={styles.addButton} onPress={handleAddExpense}>
+        <Feather name="plus" size={20} color={COLORS.white} />
         <Text style={styles.addButtonText}>Add Expense</Text>
       </TouchableOpacity>
-    </View>
+
+      <Modal
+        visible={isModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={handleClose}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {initialExpense ? 'Edit Expense' : 'Add New Expense'}
+              </Text>
+              <TouchableOpacity onPress={handleClose}>
+                <Feather name="x" size={24} color={COLORS.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Category</Text>
+              <View style={styles.categoryContainer}>
+                {categories.map((cat) => (
+                  <TouchableOpacity
+                    key={cat}
+                    style={[
+                      styles.categoryButton,
+                      category === cat && styles.selectedCategory,
+                    ]}
+                    onPress={() => setCategory(cat)}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryText,
+                        category === cat && styles.selectedCategoryText,
+                      ]}
+                    >
+                      {cat}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Amount (₹)</Text>
+              <TextInput
+                style={styles.input}
+                value={amount}
+                onChangeText={setAmount}
+                placeholder="Enter amount"
+                keyboardType="numeric"
+                placeholderTextColor={COLORS.textSecondary}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Description (Optional)</Text>
+              <TextInput
+                style={styles.input}
+                value={description}
+                onChangeText={setDescription}
+                placeholder="Enter description"
+                placeholderTextColor={COLORS.textSecondary}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={handleAdd}
+            >
+              <Text style={styles.submitButtonText}>
+                {initialExpense ? 'Update Expense' : 'Add Expense'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  addButtonText: {
+    color: COLORS.white,
+    fontFamily: FONTS.medium,
+    fontSize: FONT_SIZES.body1,
+    marginLeft: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
     backgroundColor: COLORS.white,
-    borderRadius: 10,
-    padding: 15,
+    width: '90%',
+    borderRadius: 16,
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 20,
   },
-  title: {
-    fontFamily: FONTS.semiBold,
-    fontSize: 18,
+  modalTitle: {
+    fontSize: FONT_SIZES.body1,
+    fontFamily: FONTS.bold,
     color: COLORS.text,
-    marginBottom: 15,
+  },
+  formGroup: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: FONT_SIZES.body2,
+    fontFamily: FONTS.medium,
+    color: COLORS.textSecondary,
+    marginBottom: 8,
   },
   categoryContainer: {
-    marginBottom: 15,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   categoryButton: {
-    paddingHorizontal: 15,
     paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#F0F0F0',
-    marginRight: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: COLORS.lightGray,
   },
-  selectedCategoryButton: {
+  selectedCategory: {
     backgroundColor: COLORS.primary,
   },
   categoryText: {
-    fontFamily: FONTS.medium,
-    fontSize: 14,
-    color: COLORS.text,
+    fontSize: FONT_SIZES.body2,
+    fontFamily: FONTS.regular,
+    color: COLORS.textSecondary,
   },
   selectedCategoryText: {
     color: COLORS.white,
   },
   input: {
-    borderWidth: 1,
-    borderColor: COLORS.textSecondary,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 15,
+    fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.regular,
-    fontSize: 16,
     color: COLORS.text,
+    padding: 12,
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
   },
-  addButton: {
+  submitButton: {
     backgroundColor: COLORS.primary,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
+    marginTop: 8,
   },
-  addButtonText: {
+  submitButtonText: {
     color: COLORS.white,
     fontFamily: FONTS.medium,
-    fontSize: 16,
+    fontSize: FONT_SIZES.body1,
   },
-});
-
-export default AddExpenseForm; 
+}); 

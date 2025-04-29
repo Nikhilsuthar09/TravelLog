@@ -1,110 +1,90 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react'
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { auth } from '../config/firebase';
+import { User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from 'firebase/auth';
 
-type User = {
-  email: string;
-  username: string;
-};
-
-type AuthContextType = {
+interface AuthContextType {
   user: User | null;
-  isLoading: boolean;
-  login:(email: string, password:string) => Promise<void>;
-  signup: (email:string, username:string, password:string) => Promise<void>;
-  logout: () => Promise<void>;
-};
+  loading: boolean;
+  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-interface Props{
-  children: ReactNode;
-}
 
-export const AuthProvider = ({children}: Props) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  useEffect(() => {
-    const loadUser = async () => {
-      try{
-        const userDataString = await AsyncStorage.getItem('userData');
-        if(userDataString){
-          setUser(JSON.parse(userDataString));
-        }
-      }
-      catch(e){
-        console.error('Failed to load user data', e)
-      }
-      finally{
-        setIsLoading(false);
-      }
-    }
-    loadUser();
-  }, [])
-  const login = async(email:string, password:string) => {
-    setIsLoading(true);
-    try{
-      const userData = {
-        email,
-        username: 'Nikhil'
-    };
-    await AsyncStorage.setItem('userData', JSON.stringify(userData));
-    await AsyncStorage.setItem('userLoggedIn', 'true');
-    setUser(userData);
-  } 
-  catch(error){
-    console.error('Login failed', error);
-    throw new Error('Login Failed')
-  }
-  finally{
-    setIsLoading(false)
-  }
-}
-const signup = async (email: string, username: string, password:string)=> {
-  setIsLoading(true);
-  try{
-    const userData = {
-      email,
-      username,
-    }
-    await AsyncStorage.setItem('userData', JSON.stringify(userData));
-    await AsyncStorage.setItem('userLoggedIn', 'true');
-    setUser(userData)
-  }
-  catch(e){
-    console.error('Signup failed', e);
-    throw new Error('Signup failed');
-  }
-  finally{
-    setIsLoading(false);
-  }
-}
+  const [loading, setLoading] = useState(true);
 
-const logout = async () => {
-  try{
-    await AsyncStorage.removeItem('userLoggedIn');
-    await AsyncStorage.removeItem('userData');
-    setUser(null)
-  }
-  catch(e){
-    console.error('Logout failed',e);
-  }
-}
-return (
-  <AuthContext.Provider
-  value={{
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const signUp = async (email: string, password: string, fullName: string) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Extract first name from full name
+      const firstName = fullName.split(' ')[0];
+      // Capitalize first letter
+      const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+      // Update the user's display name
+      if (userCredential.user) {
+        await updateProfile(userCredential.user, {
+          displayName: formattedName
+        });
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const signIn = async (email: string, password: string) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      // If user doesn't have a display name, set it to their email username
+      if (userCredential.user && !userCredential.user.displayName) {
+        const emailUsername = email.split('@')[0];
+        // Take only the first part before any dots or underscores
+        const firstName = emailUsername.split(/[._]/)[0];
+        // Capitalize first letter
+        const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+        await updateProfile(userCredential.user, {
+          displayName: formattedName
+        });
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const value = {
     user,
-    isLoading,
-    login,
-    signup,
-    logout
-  }}
-  >
-    {children}
-  </AuthContext.Provider>
-)
-}
+    loading,
+    signUp,
+    signIn,
+    signOut: handleSignOut,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if(!context){
-    throw new Error('useAuth must be used inside AuthProvider')
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context
-}
+  return context;
+};

@@ -11,13 +11,15 @@ import SplashScreen from "@screens/SplashScreen";
 import AuthScreen from "@screens/AuthScreen";
 
 export type RootStackParamList = {
-  Splash:undefined;
-  Auth:undefined;
+  Splash: undefined;
+  Auth: undefined;
   Tabs: NavigatorScreenParams<BottomTabParamList>;
   TripDetails: Trip;
-  EditItinerary: {tripId: string};
-  EditPacking: {tripId: string};
-  EditExpenses: {tripId: string}
+  EditItinerary: { tripId: string };
+  EditPacking: { tripId: string };
+  EditExpenses: { tripId: string };
+  Weather: { tripId: string };
+  QuickNotes: { tripId: string };
 }
 export type BottomTabParamList = {
   Home:undefined;

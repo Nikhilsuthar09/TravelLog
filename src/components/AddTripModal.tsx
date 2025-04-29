@@ -11,10 +11,10 @@ import {
 } from "react-native";
 import Modal from "react-native-modal"
 import * as ImagePicker from "expo-image-picker"
-import { COLORS, FONTS } from "../constants/theme";
+import { COLORS, FONTS, FONT_SIZES } from "../constants/theme";
 import { Calendar } from "react-native-calendars";
 import { getMarkedDates } from "../utils/getMarkedDates";
-import { useTrip } from "context/TripContext";
+import { useTrip } from "@context/TripContext";
 import { Trip } from "types";
 
 interface Props {
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     margin:0,
   },
   heading: {
-    fontSize: 20,
+    fontSize: FONT_SIZES.h3,
     fontFamily: FONTS.bold,
     marginBottom: 12,
     color: COLORS.text,
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.textSecondary,
     borderRadius: 10,
     padding: 12,
-    fontSize: 16,
+    fontSize: FONT_SIZES.input,
     fontFamily: FONTS.medium,
     marginBottom: 12,
     color: COLORS.text,
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   dateInfo: {
     marginTop: 8,
     fontFamily: FONTS.medium,
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     color: COLORS.text,
   },
   confirmButton: {
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   confirmText: {
     color: COLORS.white,
     fontFamily: FONTS.semiBold,
-    fontSize: 16,
+    fontSize: FONT_SIZES.button,
   },
   closeButton: {
     marginTop: 12,
@@ -237,6 +237,6 @@ const styles = StyleSheet.create({
   pickImageText: {
     color: COLORS.white,
     fontFamily: FONTS.medium,
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
   }
 });

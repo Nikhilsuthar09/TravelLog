@@ -1,108 +1,91 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { COLORS, FONTS } from '@constants/theme';
+import { COLORS, FONTS, FONT_SIZES } from '../constants/theme';
 import { Feather } from '@expo/vector-icons';
 
-interface ExpenseItemProps {
+export interface ExpenseItemProps {
   id: string;
   category: string;
   amount: number;
   description: string;
-  date: string;
-  onUpdate: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdit: (id: string) => void;
 }
 
-const ExpenseItem: React.FC<ExpenseItemProps> = ({
-  id,
-  category,
-  amount,
-  description,
-  date,
-  onUpdate,
-  onDelete,
-}) => {
-  const formattedDate = new Date(date).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
-
+export default function ExpenseItem({ id, category, amount, description, onDelete, onEdit }: ExpenseItemProps) {
   return (
-    <View style={styles.container}>
-      <View style={styles.leftContent}>
-        <Text style={styles.category}>{category}</Text>
-        <Text style={styles.description}>{description}</Text>
-        <Text style={styles.date}>{formattedDate}</Text>
-      </View>
-      
-      <View style={styles.rightContent}>
-        <Text style={styles.amount}>
-          {amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
-        </Text>
-        <View style={styles.actions}>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => onUpdate(id)}
-          >
-            <Feather name="edit" size={20} color={COLORS.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.actionButton}
+    <TouchableOpacity 
+      style={styles.container}
+      onPress={() => onEdit(id)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.content}>
+        <View style={styles.categoryContainer}>
+          <Text style={styles.category}>{category}</Text>
+          {description !== category && (
+            <Text style={styles.description}>{description}</Text>
+          )}
+        </View>
+        <View style={styles.amountContainer}>
+          <Text style={styles.amount}>₹{amount.toLocaleString('en-IN')}</Text>
+          <TouchableOpacity
+            style={styles.deleteButton}
             onPress={() => onDelete(id)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Feather name="trash-2" size={20} color="#FF3B30" />
+            <Feather name="trash-2" size={18} color={COLORS.danger} />
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: COLORS.gray,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  content: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 10,
+    padding: 16,
   },
-  leftContent: {
+  categoryContainer: {
     flex: 1,
   },
-  rightContent: {
-    alignItems: 'flex-end',
-  },
   category: {
-    fontFamily: FONTS.semiBold,
-    fontSize: 16,
+    fontSize: FONT_SIZES.body1,
+    fontFamily: FONTS.medium,
     color: COLORS.text,
     marginBottom: 4,
   },
   description: {
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.regular,
-    fontSize: 14,
     color: COLORS.textSecondary,
-    marginBottom: 4,
   },
-  date: {
-    fontFamily: FONTS.regular,
-    fontSize: 12,
-    color: COLORS.textSecondary,
+  amountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   amount: {
+    fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.semiBold,
-    fontSize: 16,
     color: COLORS.text,
-    marginBottom: 8,
+    marginRight: 12,
   },
-  actions: {
-    flexDirection: 'row',
+  deleteButton: {
+    padding: 4,
   },
-  actionButton: {
-    marginLeft: 10,
-  },
-});
-
-export default ExpenseItem; 
+}); 

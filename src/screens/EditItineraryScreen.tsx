@@ -3,8 +3,8 @@ import { COLORS, FONTS } from "@constants/theme";
 import { Feather } from "@expo/vector-icons";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { ItineraryActivity, ItineraryDay } from "@types";
-import { useTrip } from "context/TripContext";
-import { RootStackParamList } from "navigation/AppNavigator";
+import { useTrip } from "@context/TripContext";
+import { RootStackParamList } from "@navigation/AppNavigator";
 import { useEffect, useState, useRef } from "react";
 import {
   View,

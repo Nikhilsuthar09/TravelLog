@@ -7,9 +7,10 @@ import {
   StatusBar,
   Platform,
   TouchableOpacity,
+  View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { COLORS, FONTS } from "@constants/theme";
+import { COLORS, FONTS, FONT_SIZES } from "@constants/theme";
 import { Feather } from "@expo/vector-icons";
 
 interface AnimatedHeaderProps {
@@ -176,18 +177,18 @@ const styles = StyleSheet.create({
     zIndex: 5,
   },
   compactTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.h4,
     fontFamily: FONTS.bold,
     color: COLORS.white,
     marginLeft: 4,
   },
   greeting: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.h2,
     fontFamily: FONTS.bold,
     color: COLORS.white,
   },
   date: {
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.regular,
     color: "rgba(255, 255, 255, 0.9)",
     marginTop: 1,
@@ -204,6 +205,17 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
+    zIndex:99
+  },
+  headerTitle: {
+    color: COLORS.white,
+    fontSize: FONT_SIZES.h4,
+    fontFamily: FONTS.bold,
+  },
+  expandedTitle: {
+    color: COLORS.white,
+    fontSize: FONT_SIZES.h2,
+    fontFamily: FONTS.bold,
   },
 });
 

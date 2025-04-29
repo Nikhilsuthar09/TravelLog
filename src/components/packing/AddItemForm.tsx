@@ -1,4 +1,4 @@
-import { COLORS, FONTS } from "@constants/theme";
+import { COLORS, FONTS, FONT_SIZES } from "@constants/theme";
 import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
 import { View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontFamily: FONTS.regular,
-    fontSize: 16,
+    fontSize: FONT_SIZES.input,
     marginRight: 10,
   },
   quantityInput: {
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontFamily: FONTS.regular,
-    fontSize: 14,
+    fontSize: FONT_SIZES.body2,
     textAlign: "center",
   },
   addButton: {

@@ -1,4 +1,4 @@
-import { COLORS, FONTS } from "@constants/theme";
+import { COLORS, FONTS, FONT_SIZES } from "@constants/theme";
 import { Feather } from "@expo/vector-icons";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from "react-native";
 
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   },
   name: {
     flex: 1,
-    fontSize: 16,
+    fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.regular,
     color: COLORS.text,
   },
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     textAlign: "center",
     fontFamily: FONTS.regular,
-    fontSize: 16,
+    fontSize: FONT_SIZES.input,
     marginRight: 4,
     paddingVertical: 0,
     paddingHorizontal: 0,
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     textAlignVertical: "center",
   },
   quantityLabel: {
-    fontSize: 12,
+    fontSize: FONT_SIZES.caption,
     fontFamily: FONTS.regular,
     color: COLORS.textSecondary,
   },

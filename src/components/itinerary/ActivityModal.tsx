@@ -1,4 +1,4 @@
-import { COLORS, FONTS } from "@constants/theme";
+import { COLORS, FONTS, FONT_SIZES } from "@constants/theme";
 import { Feather } from "@expo/vector-icons";
 import { ItineraryActivity, ItineraryDay } from "@types";
 import { useState } from "react";
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.lightGray,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: FONT_SIZES.h3,
     fontFamily: FONTS.bold,
     color: COLORS.text,
   },
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   label: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.medium,
     color: COLORS.text,
     marginBottom: 8,
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
     fontFamily: FONTS.regular,
-    fontSize: 16,
+    fontSize: FONT_SIZES.input,
   },
   textArea: {
     height: 100,
@@ -333,6 +333,7 @@ const styles = StyleSheet.create({
   categoryText: {
     color: COLORS.text,
     fontFamily: FONTS.regular,
+    fontSize: FONT_SIZES.button,
   },
   selectedCategoryText: {
     color: COLORS.white,
@@ -351,6 +352,7 @@ const styles = StyleSheet.create({
   statusText: {
     color: COLORS.text,
     fontFamily: FONTS.regular,
+    fontSize: FONT_SIZES.button,
   },
   selectedStatusText: {
     color: COLORS.white,
@@ -369,6 +371,7 @@ const styles = StyleSheet.create({
   priorityText: {
     color: COLORS.text,
     fontFamily: FONTS.regular,
+    fontSize: FONT_SIZES.button,
   },
   selectedPriorityText: {
     color: COLORS.white,
@@ -396,9 +399,11 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: COLORS.text,
     fontFamily: FONTS.medium,
+    fontSize: FONT_SIZES.button,
   },
   saveButtonText: {
     color: COLORS.white,
     fontFamily: FONTS.medium,
+    fontSize: FONT_SIZES.button,
   },
 }); 

@@ -1,12 +1,12 @@
 // App.tsx
+import React, { useCallback, useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import { useCallback, useEffect, useState } from "react";
 import { Text } from "react-native";
-import { TripProvider } from "context/TripContext";
-import AppNavigator from "navigation/AppNavigator";
-import { AuthProvider } from "context/AuthContext";
+import { TripProvider } from "./src/context/TripContext";
+import AppNavigator from "./src/navigation/AppNavigator";
+import { AuthProvider } from "./src/context/AuthContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -43,11 +43,11 @@ export default function App() {
 
   return (
     <AuthProvider>
-    <TripProvider>
-    <NavigationContainer onReady={onLayoutRootView}>
-      <AppNavigator />
-    </NavigationContainer>
-    </TripProvider>
+      <TripProvider>
+        <NavigationContainer onReady={onLayoutRootView}>
+          <AppNavigator />
+        </NavigationContainer>
+      </TripProvider>
     </AuthProvider>
   );
 }

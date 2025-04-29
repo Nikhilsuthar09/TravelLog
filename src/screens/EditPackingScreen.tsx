@@ -1,8 +1,8 @@
 // src/screens/EditPackingScreens.tsx
-import { COLORS, FONTS } from "@constants/theme";
+import { COLORS, FONTS, FONT_SIZES } from "@constants/theme";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
-import { useTrip } from "context/TripContext";
-import { RootStackParamList } from "navigation/AppNavigator";
+import { useTrip } from "@context/TripContext";
+import { RootStackParamList } from "@navigation/AppNavigator";
 import { useEffect, useState, useRef } from "react";
 import {
   View,
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     paddingTop: HEADER_CONFIG.HEIGHT + 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.h2,
     fontFamily: FONTS.bold,
     color: COLORS.text,
     marginBottom: 20,
