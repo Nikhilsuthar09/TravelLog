@@ -21,10 +21,13 @@ export type RootStackParamList = {
   Weather: { tripId: string };
   QuickNotes: { tripId: string };
 }
+
 export type BottomTabParamList = {
-  Home:undefined;
-  Trips:{showAddModal?: boolean} | undefined;
+  Home: undefined;
+  Trips: { showAddModal?: boolean } | undefined;
+  Notes: undefined;
 }
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator(){

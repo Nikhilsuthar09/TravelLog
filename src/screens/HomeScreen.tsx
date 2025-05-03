@@ -122,61 +122,48 @@ export default function HomeScreen() {
     
     setLoadingAction(action);
     
-    try {
-      switch (action) {
-        case 'add':
-          handleAddTrip();
-          break;
-        case 'trips':
-          handleNavigateTotrips();
-          break;
-        case 'packing':
-          handleNavigateToPacking();
-          break;
-        case 'weather':
-          if (upcomingTrip) {
-            navigation.navigate("TripDetails", {
-              id: upcomingTrip.id,
-              title: upcomingTrip.title,
-              destination: upcomingTrip.destination,
-              startDate: upcomingTrip.startDate,
-              endDate: upcomingTrip.endDate,
-              imageUri: upcomingTrip.imageUri ?? "",
-            });
-          }
-          break;
-        case 'notes':
-          if (upcomingTrip) {
-            navigation.navigate("TripDetails", {
-              id: upcomingTrip.id,
-              title: upcomingTrip.title,
-              destination: upcomingTrip.destination,
-              startDate: upcomingTrip.startDate,
-              endDate: upcomingTrip.endDate,
-              imageUri: upcomingTrip.imageUri ?? "",
-            });
-          }
-          break;
-        case 'share':
-          if (upcomingTrip) {
-            Alert.alert(
-              "Share Trip",
-              "Share your trip details with friends and family",
-              [
-                { text: "Cancel", style: "cancel" },
-                { text: "Share", onPress: () => {
-                  // Implement sharing logic
-                }}
-              ]
-            );
-          }
-          break;
-      }
-    } catch (error) {
-      Alert.alert("Error", "Something went wrong. Please try again.");
-    } finally {
-      setLoadingAction(null);
+    switch (action) {
+      case 'add':
+        handleAddTrip();
+        break;
+      case 'trips':
+        handleNavigateTotrips();
+        break;
+      case 'packing':
+        handleNavigateToPacking();
+        break;
+      case 'notes':
+        navigation.navigate('Tabs', { screen: 'Notes' });
+        break;
+      case 'weather':
+        if (upcomingTrip) {
+          navigation.navigate("TripDetails", {
+            id: upcomingTrip.id,
+            title: upcomingTrip.title,
+            destination: upcomingTrip.destination,
+            startDate: upcomingTrip.startDate,
+            endDate: upcomingTrip.endDate,
+            imageUri: upcomingTrip.imageUri ?? "",
+          });
+        }
+        break;
+      case 'share':
+        if (upcomingTrip) {
+          Alert.alert(
+            "Share Trip",
+            "Share your trip details with friends and family",
+            [
+              { text: "Cancel", style: "cancel" },
+              { text: "Share", onPress: () => {
+                // Implement sharing logic
+              }}
+            ]
+          );
+        }
+        break;
     }
+    
+    setLoadingAction(null);
   };
 
   return (
@@ -298,121 +285,123 @@ export default function HomeScreen() {
           </View>
 
           {/* Quick Actions */}
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Quick Actions</Text>
+          {(upcomingTrips.length > 0 || ongoingTrips.length > 0) && (
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Quick Actions</Text>
+                {showTooltip && (
+                  <TouchableOpacity 
+                    onPress={() => setShowTooltip(false)}
+                    style={styles.tooltipButton}
+                  >
+                    <Feather name="info" size={16} color={COLORS.primary} />
+                  </TouchableOpacity>
+                )}
+              </View>
               {showTooltip && (
-                <TouchableOpacity 
-                  onPress={() => setShowTooltip(false)}
-                  style={styles.tooltipButton}
-                >
-                  <Feather name="info" size={16} color={COLORS.primary} />
-                </TouchableOpacity>
+                <Text style={styles.tooltipText}>
+                  Tap any action to quickly access common features
+                </Text>
               )}
+              <View style={styles.quickActionsContainer}>
+                <TouchableOpacity
+                  style={[styles.quickActionButton, styles.cardShadow]}
+                  onPress={() => handleQuickAction('add')}
+                  activeOpacity={0.8}
+                  disabled={loadingAction === 'add'}
+                >
+                  <View style={styles.actionIconContainer}>
+                    {loadingAction === 'add' ? (
+                      <ActivityIndicator color={COLORS.primary} />
+                    ) : (
+                      <Feather name="plus" size={20} color={COLORS.primary} />
+                    )}
+                  </View>
+                  <Text style={styles.actionText}>Add Trip</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.quickActionButton, styles.cardShadow]}
+                  onPress={() => handleQuickAction('trips')}
+                  activeOpacity={0.8}
+                  disabled={loadingAction === 'trips'}
+                >
+                  <View style={styles.actionIconContainer}>
+                    {loadingAction === 'trips' ? (
+                      <ActivityIndicator color={COLORS.primary} />
+                    ) : (
+                      <Feather name="map" size={20} color={COLORS.primary} />
+                    )}
+                  </View>
+                  <Text style={styles.actionText}>My Trips</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.quickActionButton, styles.cardShadow]}
+                  onPress={() => handleQuickAction('packing')}
+                  activeOpacity={0.8}
+                  disabled={loadingAction === 'packing' || !upcomingTrip}
+                >
+                  <View style={styles.actionIconContainer}>
+                    {loadingAction === 'packing' ? (
+                      <ActivityIndicator color={COLORS.primary} />
+                    ) : (
+                      <Feather name="check-square" size={20} color={COLORS.primary} />
+                    )}
+                  </View>
+                  <Text style={styles.actionText}>Packing</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.quickActionButton, styles.cardShadow]}
+                  onPress={() => handleQuickAction('weather')}
+                  activeOpacity={0.8}
+                  disabled={loadingAction === 'weather' || !upcomingTrip}
+                >
+                  <View style={styles.actionIconContainer}>
+                    {loadingAction === 'weather' ? (
+                      <ActivityIndicator color={COLORS.primary} />
+                    ) : (
+                      <Feather name="cloud" size={20} color={COLORS.primary} />
+                    )}
+                  </View>
+                  <Text style={styles.actionText}>Weather</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.quickActionButton, styles.cardShadow]}
+                  onPress={() => handleQuickAction('notes')}
+                  activeOpacity={0.8}
+                  disabled={loadingAction === 'notes' || !upcomingTrip}
+                >
+                  <View style={styles.actionIconContainer}>
+                    {loadingAction === 'notes' ? (
+                      <ActivityIndicator color={COLORS.primary} />
+                    ) : (
+                      <Feather name="edit-2" size={20} color={COLORS.primary} />
+                    )}
+                  </View>
+                  <Text style={styles.actionText}>Notes</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.quickActionButton, styles.cardShadow]}
+                  onPress={() => handleQuickAction('share')}
+                  activeOpacity={0.8}
+                  disabled={loadingAction === 'share' || !upcomingTrip}
+                >
+                  <View style={styles.actionIconContainer}>
+                    {loadingAction === 'share' ? (
+                      <ActivityIndicator color={COLORS.primary} />
+                    ) : (
+                      <Feather name="share-2" size={20} color={COLORS.primary} />
+                    )}
+                  </View>
+                  <Text style={styles.actionText}>Share</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            {showTooltip && (
-              <Text style={styles.tooltipText}>
-                Tap any action to quickly access common features
-              </Text>
-            )}
-            <View style={styles.quickActionsContainer}>
-              <TouchableOpacity
-                style={[styles.quickActionButton, styles.cardShadow]}
-                onPress={() => handleQuickAction('add')}
-                activeOpacity={0.8}
-                disabled={loadingAction === 'add'}
-              >
-                <View style={styles.actionIconContainer}>
-                  {loadingAction === 'add' ? (
-                    <ActivityIndicator color={COLORS.primary} />
-                  ) : (
-                    <Feather name="plus" size={20} color={COLORS.primary} />
-                  )}
-                </View>
-                <Text style={styles.actionText}>Add Trip</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.quickActionButton, styles.cardShadow]}
-                onPress={() => handleQuickAction('trips')}
-                activeOpacity={0.8}
-                disabled={loadingAction === 'trips'}
-              >
-                <View style={styles.actionIconContainer}>
-                  {loadingAction === 'trips' ? (
-                    <ActivityIndicator color={COLORS.primary} />
-                  ) : (
-                    <Feather name="map" size={20} color={COLORS.primary} />
-                  )}
-                </View>
-                <Text style={styles.actionText}>My Trips</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.quickActionButton, styles.cardShadow]}
-                onPress={() => handleQuickAction('packing')}
-                activeOpacity={0.8}
-                disabled={loadingAction === 'packing'}
-              >
-                <View style={styles.actionIconContainer}>
-                  {loadingAction === 'packing' ? (
-                    <ActivityIndicator color={COLORS.primary} />
-                  ) : (
-                    <Feather name="check-square" size={20} color={COLORS.primary} />
-                  )}
-                </View>
-                <Text style={styles.actionText}>Packing</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.quickActionButton, styles.cardShadow]}
-                onPress={() => handleQuickAction('weather')}
-                activeOpacity={0.8}
-                disabled={loadingAction === 'weather' || !upcomingTrip}
-              >
-                <View style={styles.actionIconContainer}>
-                  {loadingAction === 'weather' ? (
-                    <ActivityIndicator color={COLORS.primary} />
-                  ) : (
-                    <Feather name="cloud" size={20} color={COLORS.primary} />
-                  )}
-                </View>
-                <Text style={styles.actionText}>Weather</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.quickActionButton, styles.cardShadow]}
-                onPress={() => handleQuickAction('notes')}
-                activeOpacity={0.8}
-                disabled={loadingAction === 'notes' || !upcomingTrip}
-              >
-                <View style={styles.actionIconContainer}>
-                  {loadingAction === 'notes' ? (
-                    <ActivityIndicator color={COLORS.primary} />
-                  ) : (
-                    <Feather name="edit-2" size={20} color={COLORS.primary} />
-                  )}
-                </View>
-                <Text style={styles.actionText}>Notes</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.quickActionButton, styles.cardShadow]}
-                onPress={() => handleQuickAction('share')}
-                activeOpacity={0.8}
-                disabled={loadingAction === 'share' || !upcomingTrip}
-              >
-                <View style={styles.actionIconContainer}>
-                  {loadingAction === 'share' ? (
-                    <ActivityIndicator color={COLORS.primary} />
-                  ) : (
-                    <Feather name="share-2" size={20} color={COLORS.primary} />
-                  )}
-                </View>
-                <Text style={styles.actionText}>Share</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          )}
 
           {/* Recent Trips */}
           {trips.length > 0 && (

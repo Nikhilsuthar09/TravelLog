@@ -10,6 +10,8 @@ import { useTrip } from "@context/TripContext";
 import { Trip } from "@types";
 import { Feather } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
+import { formatCurrency, formatCurrencyString } from '@utils/currency';
 
 type RouteParams = {
   TripDetails: Trip;
@@ -108,15 +110,6 @@ export default function TripDetailsScreen() {
     }
   }, [trip]);
 
-  const formatCurrency = (amount: number) => {
-    return (
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <FontAwesome name="inr" size={14} color={COLORS.text} />
-        <Text>{amount.toLocaleString('en-IN')}</Text>
-      </View>
-    );
-  };
-
   const renderItineraryContent = () => {
     if (!trip.itinerary && !trip.structuredItinerary) {
       return (
@@ -136,48 +129,97 @@ export default function TripDetailsScreen() {
       try {
         const structuredItinerary = JSON.parse(trip.structuredItinerary);
         return (
-          <View>
+          <View style={styles.itineraryContainer}>
             {structuredItinerary.map((day: any) => (
-              <View key={day.id} style={styles.dayContainer}>
-                <Text style={styles.dayTitle}>Day {day.dayNumber}</Text>
-                {day.activities.map((activity: any) => (
-                  <View key={activity.id} style={styles.activityContainer}>
-                    <Text style={styles.activityTitle}>{activity.title}</Text>
-                    {activity.description && (
-                      <Text style={styles.activityDescription}>{activity.description}</Text>
-                    )}
-                    {activity.location && (
-                      <Text style={styles.activityLocation}>📍 {activity.location}</Text>
-                    )}
-                    {activity.startTime && activity.endTime && (
-                      <Text style={styles.activityTime}>
-                        🕒 {activity.startTime} - {activity.endTime}
-                      </Text>
-                    )}
-                    {activity.category && (
-                      <Text style={styles.activityCategory}>🏷️ {activity.category}</Text>
-                    )}
-                    {activity.status && (
-                      <Text style={[
-                        styles.activityStatus,
-                        activity.status === 'completed' && styles.activityStatusCompleted,
-                        activity.status === 'confirmed' && styles.activityStatusConfirmed,
-                        activity.status === 'planned' && styles.activityStatusPlanned
-                      ]}>
-                        {activity.status === 'completed' ? '✅ Completed' :
-                         activity.status === 'confirmed' ? '✓ Confirmed' :
-                         '📅 Planned'}
-                      </Text>
-                    )}
+              <View key={day.id} style={styles.dayCard}>
+                <View style={styles.dayHeader}>
+                  <Text style={styles.dayNumber}>Day {day.dayNumber}</Text>
+                  <Text style={styles.dayDate}>
+                    {new Date(day.date).toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </Text>
+                </View>
+                {day.activities.length > 0 ? (
+                  <View style={styles.activitiesContainer}>
+                    {day.activities.map((activity: any) => (
+                      <View key={activity.id} style={styles.activityCard}>
+                        <View style={styles.activityHeader}>
+                          <View style={styles.activityIconContainer}>
+                            <MaterialIcons
+                              name={getCategoryIcon(activity.category)}
+                              size={24}
+                              color={COLORS.primary}
+                            />
+                          </View>
+                          <View style={styles.activityTitleContainer}>
+                            <Text style={styles.activityTitle}>{activity.title}</Text>
+                            <View style={styles.activityMeta}>
+                              <View style={styles.categoryBadge}>
+                                <Text style={styles.categoryText}>{activity.category}</Text>
+                              </View>
+                            </View>
+                          </View>
+                        </View>
+
+                        <View style={styles.activityDetails}>
+                          {activity.location && (
+                            <View style={styles.detailRow}>
+                              <MaterialIcons name="location-on" size={16} color={COLORS.textSecondary} />
+                              <Text style={styles.detailText}>{activity.location}</Text>
+                            </View>
+                          )}
+                          {activity.startTime && activity.endTime && (
+                            <View style={styles.detailRow}>
+                              <MaterialIcons name="access-time" size={16} color={COLORS.textSecondary} />
+                              <Text style={styles.detailText}>
+                                {activity.startTime} - {activity.endTime}
+                              </Text>
+                            </View>
+                          )}
+                          {activity.description && (
+                            <View style={styles.descriptionContainer}>
+                              <Text style={styles.description}>{activity.description}</Text>
+                            </View>
+                          )}
+                          {(activity.cost || activity.bookingReference) && (
+                            <View style={styles.additionalInfo}>
+                              {activity.cost && (
+                                <View style={styles.infoBadge}>
+                                  <MaterialIcons name="currency-rupee" size={16} color={COLORS.textSecondary} />
+                                  <Text style={styles.infoText}>
+                                    {activity.cost.toLocaleString("en-IN", {
+                                      maximumFractionDigits: 2,
+                                      minimumFractionDigits: 2
+                                    })}
+                                  </Text>
+                                </View>
+                              )}
+                              {activity.bookingReference && (
+                                <View style={styles.infoBadge}>
+                                  <MaterialIcons name="confirmation-number" size={16} color={COLORS.textSecondary} />
+                                  <Text style={styles.infoText}>{activity.bookingReference}</Text>
+                                </View>
+                              )}
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                    ))}
                   </View>
-                ))}
+                ) : (
+                  <View style={styles.noActivitiesContainer}>
+                    <Text style={styles.noActivitiesText}>No activities planned for this day</Text>
+                  </View>
+                )}
               </View>
             ))}
           </View>
         );
       } catch (error) {
         console.error("Failed to parse structured itinerary:", error);
-        // Fallback to plain text if structured parsing fails
         return (
           <View>
             <Text style={styles.tabContentText}>{trip.itinerary}</Text>
@@ -192,6 +234,25 @@ export default function TripDetailsScreen() {
         <Text style={styles.tabContentText}>{trip.itinerary}</Text>
       </View>
     );
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case "sightseeing":
+        return "camera";
+      case "food":
+        return "restaurant";
+      case "transportation":
+        return "directions-bus";
+      case "accommodation":
+        return "hotel";
+      case "shopping":
+        return "shopping-bag";
+      case "entertainment":
+        return "theater-comedy";
+      default:
+        return "event";
+    }
   };
 
   const renderPackingContent = () => {
@@ -699,23 +760,29 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  budgetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    justifyContent: 'space-between',
+  },
   budgetLabel: {
     fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.semiBold,
     color: COLORS.text,
-    marginBottom: 8,
+    minWidth: 120,
   },
   totalSpentText: {
     fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.medium,
     color: COLORS.text,
-    marginBottom: 8,
+    minWidth: 120,
   },
   balanceText: {
     fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.medium,
     color: COLORS.primary,
-    marginTop: 8,
+    minWidth: 120,
   },
   overBudget: {
     color: COLORS.danger,
@@ -755,11 +822,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.body2,
     color: COLORS.textSecondary,
-  },
-  budgetRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
   },
   packingContentContainer: {
     backgroundColor: COLORS.white,
@@ -835,76 +897,141 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
     color: COLORS.gray,
   },
-  dayContainer: {
-    marginBottom: 20,
+  itineraryContainer: {
+    gap: 16,
+    paddingBottom: 16,
+  },
+  dayCard: {
     backgroundColor: COLORS.white,
+    borderRadius: 12,
     padding: 16,
-    borderRadius: 16,
-    shadowColor: COLORS.gray,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
-  dayTitle: {
+  dayHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+  },
+  dayNumber: {
     fontSize: FONT_SIZES.h4,
     fontFamily: FONTS.bold,
     color: COLORS.text,
-    marginBottom: 12,
   },
-  activityContainer: {
-    backgroundColor: COLORS.lightGray,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+  dayDate: {
+    fontSize: FONT_SIZES.body2,
+    fontFamily: FONTS.medium,
+    color: COLORS.textSecondary,
+  },
+  activitiesContainer: {
+    gap: 12,
+  },
+  activityCard: {
+    backgroundColor: COLORS.background,
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+  },
+  activityHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginBottom: 8,
+  },
+  activityIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activityTitleContainer: {
+    flex: 1,
   },
   activityTitle: {
-    fontSize: FONT_SIZES.body2,
-    fontFamily: FONTS.medium,
+    fontSize: FONT_SIZES.body1,
+    fontFamily: FONTS.bold,
     color: COLORS.text,
-    marginBottom: 8,
+    marginBottom: 4,
   },
-  activityDescription: {
+  activityMeta: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  categoryBadge: {
+    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  categoryText: {
+    color: COLORS.primary,
+    fontSize: FONT_SIZES.caption,
+    fontFamily: FONTS.medium,
+  },
+  activityDetails: {
+    gap: 8,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  detailText: {
     fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.regular,
-    color: COLORS.textSecondary,
-    marginBottom: 8,
+    color: COLORS.text,
+  },
+  descriptionContainer: {
+    marginTop: 4,
+  },
+  description: {
+    fontSize: FONT_SIZES.body2,
+    fontFamily: FONTS.regular,
+    color: COLORS.text,
     lineHeight: 20,
   },
-  activityLocation: {
-    fontSize: FONT_SIZES.body2,
-    fontFamily: FONTS.regular,
-    color: COLORS.textSecondary,
-    marginBottom: 8,
+  additionalInfo: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
   },
-  activityTime: {
-    fontSize: FONT_SIZES.body2,
-    fontFamily: FONTS.regular,
-    color: COLORS.textSecondary,
-    marginBottom: 8,
+  infoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.lightGray,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
   },
-  activityCategory: {
-    fontSize: FONT_SIZES.body2,
-    fontFamily: FONTS.regular,
-    color: COLORS.textSecondary,
-    marginBottom: 8,
-  },
-  activityStatus: {
-    fontSize: FONT_SIZES.body2,
+  infoText: {
+    fontSize: FONT_SIZES.caption,
     fontFamily: FONTS.medium,
+    color: COLORS.text,
+  },
+  noActivitiesContainer: {
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noActivitiesText: {
+    fontSize: FONT_SIZES.body2,
+    fontFamily: FONTS.regular,
     color: COLORS.textSecondary,
-  },
-  activityStatusCompleted: {
-    color: COLORS.success,
-  },
-  activityStatusConfirmed: {
-    color: COLORS.primary,
-  },
-  activityStatusPlanned: {
-    color: COLORS.warning,
+    textAlign: 'center',
   },
   shareButton: {
     position: 'absolute',

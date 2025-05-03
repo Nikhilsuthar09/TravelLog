@@ -1,7 +1,7 @@
 import { COLORS, FONTS, FONT_SIZES } from "@constants/theme";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { ItineraryActivity, ItineraryDay } from "@types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,10 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
+import { formatCurrencyString } from '@utils/currency';
 
 const ACTIVITY_CATEGORIES = [
   "Sightseeing",
@@ -52,20 +55,69 @@ export default function ActivityModal({
   isEditing,
   onSave,
 }: ActivityModalProps) {
-  const [title, setTitle] = useState(activity?.title || "");
-  const [location, setLocation] = useState(activity?.location || "");
-  const [description, setDescription] = useState(activity?.description || "");
-  const [startTime, setStartTime] = useState(activity?.startTime || "");
-  const [endTime, setEndTime] = useState(activity?.endTime || "");
-  const [category, setCategory] = useState(activity?.category || ACTIVITY_CATEGORIES[0]);
-  const [status, setStatus] = useState<"planned" | "confirmed" | "completed">(
-    activity?.status || "planned"
-  );
-  const [priority, setPriority] = useState<"low" | "medium" | "high">(
-    activity?.priority || "medium"
-  );
-  const [cost, setCost] = useState(activity?.cost?.toString() || "");
-  const [bookingRef, setBookingRef] = useState(activity?.bookingReference || "");
+  const [title, setTitle] = useState("");
+  const [location, setLocation] = useState("");
+  const [description, setDescription] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [category, setCategory] = useState(ACTIVITY_CATEGORIES[0]);
+  const [cost, setCost] = useState("");
+  const [bookingRef, setBookingRef] = useState("");
+
+  // Reset form when modal visibility changes
+  useEffect(() => {
+    if (visible) {
+      if (isEditing && activity) {
+        // If editing, populate with activity data
+        setTitle(activity.title);
+        setLocation(activity.location || "");
+        setDescription(activity.description || "");
+        setStartTime(activity.startTime || "");
+        setEndTime(activity.endTime || "");
+        setCategory(activity.category);
+        setCost(activity.cost?.toString() || "");
+        setBookingRef(activity.bookingReference || "");
+      } else {
+        // If adding new, reset all fields
+        setTitle("");
+        setLocation("");
+        setDescription("");
+        setStartTime("");
+        setEndTime("");
+        setCategory(ACTIVITY_CATEGORIES[0]);
+        setCost("");
+        setBookingRef("");
+      }
+    }
+  }, [visible, isEditing, activity]);
+
+  const validateTime = (time: string) => {
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    return timeRegex.test(time);
+  };
+
+  const formatTimeInput = (input: string) => {
+    // Remove any non-digit characters
+    const numbers = input.replace(/\D/g, '');
+    
+    // Format as HH:MM
+    if (numbers.length <= 2) {
+      return numbers;
+    } else if (numbers.length <= 4) {
+      return `${numbers.slice(0, 2)}:${numbers.slice(2)}`;
+    }
+    return `${numbers.slice(0, 2)}:${numbers.slice(2, 4)}`;
+  };
+
+  const handleStartTimeChange = (text: string) => {
+    const formattedTime = formatTimeInput(text);
+    setStartTime(formattedTime);
+  };
+
+  const handleEndTimeChange = (text: string) => {
+    const formattedTime = formatTimeInput(text);
+    setEndTime(formattedTime);
+  };
 
   const handleSave = () => {
     if (!title.trim()) {
@@ -73,18 +125,28 @@ export default function ActivityModal({
       return;
     }
 
+    if (startTime && !validateTime(startTime)) {
+      Alert.alert("Error", "Please enter a valid start time (HH:MM)");
+      return;
+    }
+
+    if (endTime && !validateTime(endTime)) {
+      Alert.alert("Error", "Please enter a valid end time (HH:MM)");
+      return;
+    }
+
     const activityData: ItineraryActivity = {
-      id: activity?.id || `activity_${Date.now()}`,
+      id: activity?.id || `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       title: title.trim(),
       description: description.trim() || undefined,
       location: location.trim() || undefined,
       startTime: startTime.trim() || undefined,
       endTime: endTime.trim() || undefined,
       category,
-      status,
-      priority,
-      cost: cost ? parseFloat(cost) : undefined,
+      cost: cost ? parseFloat(formatCurrencyString(parseFloat(cost))) : undefined,
       bookingReference: bookingRef.trim() || undefined,
+      status: "planned",
+      priority: "medium",
     };
 
     onSave(activityData);
@@ -98,150 +160,152 @@ export default function ActivityModal({
       transparent
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.modalOverlay}
+      >
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>
               {isEditing ? "Edit Activity" : "Add Activity"}
             </Text>
-            <TouchableOpacity onPress={onClose}>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Feather name="x" size={24} color={COLORS.text} />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.formContainer}>
-            <Text style={styles.label}>Title *</Text>
-            <TextInput
-              style={styles.input}
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Activity title"
-            />
+            {/* Category Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Category</Text>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                style={styles.categoryScroll}
+              >
+                {ACTIVITY_CATEGORIES.map((cat) => (
+                  <TouchableOpacity
+                    key={cat}
+                    style={[
+                      styles.categoryButton,
+                      category === cat && styles.selectedCategory,
+                    ]}
+                    onPress={() => setCategory(cat)}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryText,
+                        category === cat && styles.selectedCategoryText,
+                      ]}
+                    >
+                      {cat}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
 
-            <Text style={styles.label}>Location</Text>
-            <TextInput
-              style={styles.input}
-              value={location}
-              onChangeText={setLocation}
-              placeholder="Activity location"
-            />
+            {/* Basic Information Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Basic Information</Text>
+              <Text style={styles.label}>Title *</Text>
+              <TextInput
+                style={styles.input}
+                value={title}
+                onChangeText={setTitle}
+                placeholder="Activity title"
+                placeholderTextColor={COLORS.gray}
+              />
 
-            <Text style={styles.label}>Description</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Activity description"
-              multiline
-              numberOfLines={3}
-            />
-
-            <View style={styles.timeContainer}>
-              <View style={styles.timeInput}>
-                <Text style={styles.label}>Start Time</Text>
+              <Text style={styles.label}>Location</Text>
+              <View style={styles.inputWithIcon}>
+                <MaterialIcons name="location-on" size={20} color={COLORS.gray} style={styles.inputIcon} />
                 <TextInput
-                  style={styles.input}
-                  value={startTime}
-                  onChangeText={setStartTime}
-                  placeholder="HH:MM"
+                  style={[styles.input, styles.inputWithIconText]}
+                  value={location}
+                  onChangeText={setLocation}
+                  placeholder="Activity location"
+                  placeholderTextColor={COLORS.gray}
                 />
               </View>
-              <View style={styles.timeInput}>
-                <Text style={styles.label}>End Time</Text>
-                <TextInput
-                  style={styles.input}
-                  value={endTime}
-                  onChangeText={setEndTime}
-                  placeholder="HH:MM"
-                />
+
+              <Text style={styles.label}>Description</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={description}
+                onChangeText={setDescription}
+                placeholder="Activity description"
+                multiline
+                numberOfLines={3}
+                placeholderTextColor={COLORS.gray}
+              />
+            </View>
+
+            {/* Time Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Time</Text>
+              <View style={styles.timeContainer}>
+                <View style={styles.timeInput}>
+                  <Text style={styles.label}>Start Time</Text>
+                  <View style={styles.inputWithIcon}>
+                    <MaterialIcons name="access-time" size={20} color={COLORS.gray} style={styles.inputIcon} />
+                    <TextInput
+                      style={[styles.input, styles.inputWithIconText]}
+                      value={startTime}
+                      onChangeText={handleStartTimeChange}
+                      placeholder="HH:MM"
+                      keyboardType="numeric"
+                      maxLength={5}
+                      placeholderTextColor={COLORS.gray}
+                    />
+                  </View>
+                </View>
+                <View style={styles.timeInput}>
+                  <Text style={styles.label}>End Time</Text>
+                  <View style={styles.inputWithIcon}>
+                    <MaterialIcons name="access-time" size={20} color={COLORS.gray} style={styles.inputIcon} />
+                    <TextInput
+                      style={[styles.input, styles.inputWithIconText]}
+                      value={endTime}
+                      onChangeText={handleEndTimeChange}
+                      placeholder="HH:MM"
+                      keyboardType="numeric"
+                      maxLength={5}
+                      placeholderTextColor={COLORS.gray}
+                    />
+                  </View>
+                </View>
               </View>
             </View>
 
-            <Text style={styles.label}>Category</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {ACTIVITY_CATEGORIES.map((cat) => (
-                <TouchableOpacity
-                  key={cat}
-                  style={[
-                    styles.categoryButton,
-                    category === cat && styles.selectedCategory,
-                  ]}
-                  onPress={() => setCategory(cat)}
-                >
-                  <Text
-                    style={[
-                      styles.categoryText,
-                      category === cat && styles.selectedCategoryText,
-                    ]}
-                  >
-                    {cat}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+            {/* Cost and Booking Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Cost and Booking</Text>
+              <Text style={styles.label}>Cost</Text>
+              <View style={styles.inputWithIcon}>
+                <MaterialIcons name="currency-rupee" size={20} color={COLORS.gray} style={styles.inputIcon} />
+                <TextInput
+                  style={[styles.input, styles.inputWithIconText]}
+                  value={cost}
+                  onChangeText={setCost}
+                  placeholder="0.00"
+                  keyboardType="numeric"
+                  placeholderTextColor={COLORS.gray}
+                />
+              </View>
 
-            <Text style={styles.label}>Status</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {ACTIVITY_STATUS.map((stat) => (
-                <TouchableOpacity
-                  key={stat.value}
-                  style={[
-                    styles.statusButton,
-                    status === stat.value && styles.selectedStatus,
-                  ]}
-                  onPress={() => setStatus(stat.value as any)}
-                >
-                  <Text
-                    style={[
-                      styles.statusText,
-                      status === stat.value && styles.selectedStatusText,
-                    ]}
-                  >
-                    {stat.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            <Text style={styles.label}>Priority</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {ACTIVITY_PRIORITY.map((pri) => (
-                <TouchableOpacity
-                  key={pri.value}
-                  style={[
-                    styles.priorityButton,
-                    priority === pri.value && styles.selectedPriority,
-                  ]}
-                  onPress={() => setPriority(pri.value as any)}
-                >
-                  <Text
-                    style={[
-                      styles.priorityText,
-                      priority === pri.value && styles.selectedPriorityText,
-                    ]}
-                  >
-                    {pri.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            <Text style={styles.label}>Cost</Text>
-            <TextInput
-              style={styles.input}
-              value={cost}
-              onChangeText={setCost}
-              placeholder="0.00"
-              keyboardType="numeric"
-            />
-
-            <Text style={styles.label}>Booking Reference</Text>
-            <TextInput
-              style={styles.input}
-              value={bookingRef}
-              onChangeText={setBookingRef}
-              placeholder="Booking reference number"
-            />
+              <Text style={styles.label}>Booking Reference</Text>
+              <View style={styles.inputWithIcon}>
+                <MaterialIcons name="confirmation-number" size={20} color={COLORS.gray} style={styles.inputIcon} />
+                <TextInput
+                  style={[styles.input, styles.inputWithIconText]}
+                  value={bookingRef}
+                  onChangeText={setBookingRef}
+                  placeholder="Booking reference number"
+                  placeholderTextColor={COLORS.gray}
+                />
+              </View>
+            </View>
           </ScrollView>
 
           <View style={styles.modalFooter}>
@@ -259,7 +323,7 @@ export default function ActivityModal({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -338,43 +402,8 @@ const styles = StyleSheet.create({
   selectedCategoryText: {
     color: COLORS.white,
   },
-  statusButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: COLORS.lightGray,
-    marginRight: 8,
-    marginBottom: 16,
-  },
-  selectedStatus: {
-    backgroundColor: COLORS.primary,
-  },
-  statusText: {
-    color: COLORS.text,
-    fontFamily: FONTS.regular,
-    fontSize: FONT_SIZES.button,
-  },
-  selectedStatusText: {
-    color: COLORS.white,
-  },
-  priorityButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: COLORS.lightGray,
-    marginRight: 8,
-    marginBottom: 16,
-  },
-  selectedPriority: {
-    backgroundColor: COLORS.primary,
-  },
-  priorityText: {
-    color: COLORS.text,
-    fontFamily: FONTS.regular,
-    fontSize: FONT_SIZES.button,
-  },
-  selectedPriorityText: {
-    color: COLORS.white,
+  categoryScroll: {
+    marginBottom: 15,
   },
   modalFooter: {
     flexDirection: "row",
@@ -405,5 +434,39 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontFamily: FONTS.medium,
     fontSize: FONT_SIZES.button,
+  },
+  section: {
+    marginBottom: 20,
+    padding: 15,
+    backgroundColor: COLORS.white,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: FONT_SIZES.h4,
+    fontFamily: FONTS.bold,
+    color: COLORS.text,
+    marginBottom: 15,
+  },
+  inputWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.gray,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  inputWithIconText: {
+    flex: 1,
+  },
+  closeButton: {
+    padding: 4,
   },
 }); 

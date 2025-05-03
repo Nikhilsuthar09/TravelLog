@@ -9,6 +9,8 @@ import AddExpenseForm from '../components/AddExpenseForm';
 import ExpenseItem from '../components/ExpenseItem';
 import CommonEditHeader from '../components/CommonEditHeader';
 import { Animated } from 'react-native';
+import DeleteConfirmationModal from "../components/common/DeleteConfirmationModal";
+import { formatCurrency, formatCurrencyString } from '@utils/currency';
 
 type EditExpensesRouteProp = RouteProp<RootStackParamList, 'EditExpenses'>;
 
@@ -27,9 +29,11 @@ export default function EditExpensesScreen() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [budget, setBudget] = useState(0);
   const [totalSpent, setTotalSpent] = useState(0);
-  const [categories] = useState(['Food', 'Transport', 'Accommodation', 'Shopping', 'Entertainment', 'Other']);
+  const [categories, setCategories] = useState(['Food', 'Transport', 'Accommodation', 'Shopping', 'Entertainment', 'Other']);
   const [scrollY] = useState(new Animated.Value(0));
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
 
   const trip = trips.find(t => t.id === tripId);
 
@@ -51,19 +55,42 @@ export default function EditExpensesScreen() {
     if (trip?.budget) {
       setBudget(trip.budget);
     }
+
+    if (trip?.categories) {
+      try {
+        const parsedCategories = JSON.parse(trip.categories);
+        if (Array.isArray(parsedCategories)) {
+          setCategories(parsedCategories);
+        }
+      } catch (error) {
+        console.error('Failed to parse categories:', error);
+      }
+    }
   }, [trip]);
 
-  const handleAddExpense = (newExpense: { category: string; amount: string; description: string }) => {
-    const expense: Expense = {
-      id: Date.now().toString(),
-      category: newExpense.category,
-      amount: parseFloat(newExpense.amount),
-      description: newExpense.description,
-    };
+  const handleAddExpense = (newExpense: { category: string; amount: string; description: string; isCategoryOnly?: boolean }) => {
+    // Check if the category is new and add it to the list if it is
+    if (!categories.includes(newExpense.category)) {
+      const updatedCategories = [...categories, newExpense.category];
+      setCategories(updatedCategories);
+      // Update the trip with new categories
+      updateExpenses(tripId, JSON.stringify(expenses), JSON.stringify(updatedCategories));
+    }
 
-    const updatedExpenses = [...expenses, expense];
-    setExpenses(updatedExpenses);
-    setTotalSpent(totalSpent + expense.amount);
+    // Only add the expense if it's not just a category addition
+    if (!newExpense.isCategoryOnly) {
+      const expense: Expense = {
+        id: Date.now().toString(),
+        category: newExpense.category,
+        amount: parseFloat(newExpense.amount),
+        description: newExpense.description,
+      };
+
+      const updatedExpenses = [...expenses, expense];
+      setExpenses(updatedExpenses);
+      setTotalSpent(totalSpent + expense.amount);
+      updateExpenses(tripId, JSON.stringify(updatedExpenses), JSON.stringify(categories));
+    }
   };
 
   const handleEditExpense = (id: string) => {
@@ -83,13 +110,45 @@ export default function EditExpensesScreen() {
       description: updatedExpense.description,
     };
 
-    const updatedExpenses = expenses.map(e => 
-      e.id === editingExpense.id ? expense : e
-    );
-    
-    setExpenses(updatedExpenses);
-    setTotalSpent(updatedExpenses.reduce((sum, e) => sum + e.amount, 0));
+    // Check if the category is new and add it to the list if it is
+    if (!categories.includes(updatedExpense.category)) {
+      const updatedCategories = [...categories, updatedExpense.category];
+      setCategories(updatedCategories);
+      // Update the trip with new categories
+      updateExpenses(
+        tripId,
+        JSON.stringify(expenses.map(e => e.id === editingExpense.id ? expense : e)),
+        JSON.stringify(updatedCategories)
+      );
+    } else {
+      updateExpenses(
+        tripId,
+        JSON.stringify(expenses.map(e => e.id === editingExpense.id ? expense : e)),
+        JSON.stringify(categories)
+      );
+    }
+
+    setExpenses(prevExpenses => prevExpenses.map(e => e.id === editingExpense.id ? expense : e));
+    setTotalSpent(expenses.reduce((sum, e) => sum + (e.id === editingExpense.id ? expense.amount : e.amount), 0));
     setEditingExpense(null);
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setExpenseToDelete(id);
+    setDeleteModalVisible(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (expenseToDelete) {
+      handleDeleteExpense(expenseToDelete);
+      setDeleteModalVisible(false);
+      setExpenseToDelete(null);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalVisible(false);
+    setExpenseToDelete(null);
   };
 
   const handleDeleteExpense = (id: string) => {
@@ -103,7 +162,7 @@ export default function EditExpensesScreen() {
 
   const handleSave = () => {
     const expensesData = JSON.stringify(expenses);
-    updateExpenses(tripId, expensesData, budget.toString());
+    updateExpenses(tripId, expensesData, JSON.stringify(categories));
     navigation.goBack();
   };
 
@@ -124,6 +183,14 @@ export default function EditExpensesScreen() {
         onSavePress={handleSave}
       />
 
+      <DeleteConfirmationModal
+        visible={deleteModalVisible}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Expense"
+        message="Are you sure you want to delete this expense? This action cannot be undone."
+      />
+
       <Animated.FlatList
         data={expenses}
         renderItem={({ item }) => (
@@ -132,7 +199,7 @@ export default function EditExpensesScreen() {
             category={item.category}
             amount={item.amount}
             description={item.description}
-            onDelete={handleDeleteExpense}
+            onDelete={handleDeleteClick}
             onEdit={handleEditExpense}
           />
         )}
@@ -141,21 +208,25 @@ export default function EditExpensesScreen() {
           <View style={styles.header}>
             <View style={styles.budgetContainer}>
               <Text style={styles.budgetLabel}>Trip Budget</Text>
-              <Text style={styles.budgetAmount}>₹{budget.toLocaleString('en-IN')}</Text>
+              <View>
+                {formatCurrency(budget, { fontSize: FONT_SIZES.h2 })}
+              </View>
             </View>
             <View style={styles.summaryContainer}>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryLabel}>Total Spent</Text>
-                <Text style={styles.summaryAmount}>₹{totalSpent.toLocaleString('en-IN')}</Text>
+                <View>
+                  {formatCurrency(totalSpent, { fontSize: FONT_SIZES.h4 })}
+                </View>
               </View>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryLabel}>Remaining</Text>
-                <Text style={[
-                  styles.summaryAmount,
-                  budget - totalSpent < 0 && styles.overBudget
-                ]}>
-                  ₹{Math.abs(budget - totalSpent).toLocaleString('en-IN')}
-                </Text>
+                <View>
+                  {formatCurrency(Math.abs(budget - totalSpent), { 
+                    fontSize: FONT_SIZES.h4,
+                    color: budget - totalSpent < 0 ? COLORS.danger : COLORS.text
+                  })}
+                </View>
               </View>
             </View>
             <AddExpenseForm

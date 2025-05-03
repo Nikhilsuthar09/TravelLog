@@ -17,6 +17,7 @@ import AddItemForm from "../components/packing/AddItemForm";
 import PackingItem from "../components/packing/PackingItem";
 import ProgressBar from "../components/packing/ProgressBar";
 import CommonEditHeader, { HEADER_CONFIG } from "../components/CommonEditHeader";
+import DeleteConfirmationModal from "../components/common/DeleteConfirmationModal";
 
 type EditPackingRouteProp = RouteProp<RootStackParamList, "EditPacking">;
 
@@ -25,6 +26,7 @@ interface PackingItem {
   name: string;
   quantity: number;
   isPacked: boolean;
+  note?: string;
 }
 
 export default function EditPackingScreen() {
@@ -36,6 +38,8 @@ export default function EditPackingScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const [packingItems, setPackingItems] = useState<PackingItem[]>([]);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (trip?.packing) {
@@ -62,6 +66,7 @@ export default function EditPackingScreen() {
       name,
       quantity,
       isPacked: false,
+      note: '',
     };
 
     setPackingItems([...packingItems, newItem]);
@@ -83,8 +88,34 @@ export default function EditPackingScreen() {
     );
   };
 
+  const updateItemNote = (id: string, note: string) => {
+    setPackingItems(
+      packingItems.map((item) =>
+        item.id === id ? { ...item, note } : item
+      )
+    );
+  };
+
   const deleteItem = (id: string) => {
     setPackingItems(packingItems.filter((item) => item.id !== id));
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setItemToDelete(id);
+    setDeleteModalVisible(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (itemToDelete) {
+      deleteItem(itemToDelete);
+      setDeleteModalVisible(false);
+      setItemToDelete(null);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalVisible(false);
+    setItemToDelete(null);
   };
 
   const packedItemsCount = packingItems.filter((item) => item.isPacked).length;
@@ -127,6 +158,14 @@ export default function EditPackingScreen() {
         onSavePress={handleSave}
       />
 
+      <DeleteConfirmationModal
+        visible={deleteModalVisible}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Item"
+        message="Are you sure you want to delete this item? This action cannot be undone."
+      />
+
       <Animated.FlatList
         data={packingItems}
         renderItem={({ item }) => (
@@ -135,9 +174,11 @@ export default function EditPackingScreen() {
             name={item.name}
             quantity={item.quantity}
             isPacked={item.isPacked}
+            note={item.note}
             onTogglePacked={toggleItemPacked}
             onUpdateQuantity={updateItemQuantity}
-            onDelete={deleteItem}
+            onUpdateNote={updateItemNote}
+            onDelete={handleDeleteClick}
           />
         )}
         keyExtractor={(item) => item.id}

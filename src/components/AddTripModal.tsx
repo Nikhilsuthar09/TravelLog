@@ -15,7 +15,12 @@ import { COLORS, FONTS, FONT_SIZES } from "../constants/theme";
 import { Calendar } from "react-native-calendars";
 import { getMarkedDates } from "../utils/getMarkedDates";
 import { useTrip } from "@context/TripContext";
-import { Trip } from "types";
+import { Trip } from "../types";
+
+// Helper function to generate a unique ID
+const generateUniqueId = () => {
+  return 'trip_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+};
 
 interface Props {
   visible: boolean;
@@ -61,7 +66,7 @@ export default function AddTripModal({ visible, onClose, onConfirm }: Props) {
     if (!tripTitle || !destination || !startDate || !endDate) return;
     const defaultCategories = JSON.stringify(['Food', 'Petrol','Hotel', 'Travel'])
     const newTrip = {
-      id:tripTitle+startDate,
+      id: generateUniqueId(),
       title: tripTitle,
       destination,
       startDate,

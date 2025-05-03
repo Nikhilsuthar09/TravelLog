@@ -21,6 +21,7 @@ import ActivityModal from "../components/itinerary/ActivityModal";
 import DayList from "../components/itinerary/DayList";
 import CommonEditHeader from "../components/CommonEditHeader";
 import { HEADER_CONFIG } from "../components/CommonEditHeader";
+import DeleteConfirmationModal from "../components/common/DeleteConfirmationModal";
 
 type EditItineraryRouteProp = RouteProp<RootStackParamList, "EditItinerary">;
 // constants for dropdown options
@@ -82,6 +83,8 @@ export default function EditItineraryScreen() {
   // status and priority
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showPriorityModal, setShowPriorityModal] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [activityToDelete, setActivityToDelete] = useState<{ dayId: string; activityId: string } | null>(null);
 
   useEffect(() => {
     if (!trip) return;
@@ -252,6 +255,24 @@ export default function EditItineraryScreen() {
     });
   };
 
+  const handleDeleteClick = (dayId: string, activityId: string) => {
+    setActivityToDelete({ dayId, activityId });
+    setDeleteModalVisible(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (activityToDelete) {
+      handleDeleteActivity(activityToDelete.dayId, activityToDelete.activityId);
+      setDeleteModalVisible(false);
+      setActivityToDelete(null);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalVisible(false);
+    setActivityToDelete(null);
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar
@@ -280,7 +301,7 @@ export default function EditItineraryScreen() {
           days={days}
           onAddActivity={handleAddActivity}
           onEditActivity={handleEditActivity}
-          onDeleteActivity={handleDeleteActivity}
+          onDeleteActivity={handleDeleteClick}
         />
       </Animated.ScrollView>
 
@@ -291,6 +312,14 @@ export default function EditItineraryScreen() {
         day={currentDay}
         activity={currentActivity}
         isEditing={isEditingActivity}
+      />
+
+      <DeleteConfirmationModal
+        visible={deleteModalVisible}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Activity"
+        message="Are you sure you want to delete this activity? This action cannot be undone."
       />
     </View>
   );

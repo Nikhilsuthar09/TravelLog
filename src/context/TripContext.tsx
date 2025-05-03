@@ -1,6 +1,6 @@
 // src/context/TripContext.tsx
 import React, { createContext, ReactNode, useContext, useEffect, useState  } from "react";
-import { ItineraryDay, Trip } from "types";
+import { ItineraryDay, Trip } from "../types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 

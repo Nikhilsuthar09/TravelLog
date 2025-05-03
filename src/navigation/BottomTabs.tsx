@@ -5,7 +5,6 @@ import TripsScreen from "../screens/TripsScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@constants/theme";
 
-
 const Tab = createBottomTabNavigator();
 
 export default function BottomTabs() {

@@ -1,7 +1,8 @@
 import { COLORS, FONTS, FONT_SIZES } from "@constants/theme";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { ItineraryActivity } from "@types";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { formatCurrency } from '@utils/currency';
 
 interface ActivityListProps {
   activities: ItineraryActivity[];
@@ -14,29 +15,22 @@ export default function ActivityList({
   onEdit,
   onDelete,
 }: ActivityListProps) {
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return COLORS.danger;
-      case "medium":
-        return COLORS.warning;
-      case "low":
-        return COLORS.success;
+  const getCategoryIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case "sightseeing":
+        return "camera";
+      case "food":
+        return "restaurant";
+      case "transportation":
+        return "directions-bus";
+      case "accommodation":
+        return "hotel";
+      case "shopping":
+        return "shopping-bag";
+      case "entertainment":
+        return "theater-comedy";
       default:
-        return COLORS.text;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return COLORS.success;
-      case "confirmed":
-        return COLORS.primary;
-      case "planned":
-        return COLORS.warning;
-      default:
-        return COLORS.text;
+        return "event";
     }
   };
 
@@ -45,25 +39,61 @@ export default function ActivityList({
       {activities.map((activity) => (
         <View key={activity.id} style={styles.activityContainer}>
           <View style={styles.activityHeader}>
-            <View style={styles.activityTitleContainer}>
-              <Text style={styles.activityTitle}>{activity.title}</Text>
-              <View style={styles.activityMeta}>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    { backgroundColor: getStatusColor(activity.status) },
-                  ]}
-                >
-                  <Text style={styles.statusText}>{activity.status}</Text>
+            <View style={styles.categoryIcon}>
+              <MaterialIcons
+                name={getCategoryIcon(activity.category)}
+                size={24}
+                color={COLORS.primary}
+              />
+            </View>
+            <View style={styles.activityContent}>
+              <View style={styles.activityTitleContainer}>
+                <Text style={styles.activityTitle}>{activity.title}</Text>
+                <View style={styles.activityMeta}>
+                  <View style={styles.categoryBadge}>
+                    <Text style={styles.categoryText}>{activity.category}</Text>
+                  </View>
                 </View>
-                <View
-                  style={[
-                    styles.priorityBadge,
-                    { backgroundColor: getPriorityColor(activity.priority) },
-                  ]}
-                >
-                  <Text style={styles.priorityText}>{activity.priority}</Text>
-                </View>
+              </View>
+
+              <View style={styles.activityDetails}>
+                {activity.location && (
+                  <View style={styles.detailRow}>
+                    <MaterialIcons name="location-on" size={16} color={COLORS.textSecondary} />
+                    <Text style={styles.detailText}>{activity.location}</Text>
+                  </View>
+                )}
+                {activity.startTime && activity.endTime && (
+                  <View style={styles.detailRow}>
+                    <MaterialIcons name="access-time" size={16} color={COLORS.textSecondary} />
+                    <Text style={styles.detailText}>
+                      {activity.startTime} - {activity.endTime}
+                    </Text>
+                  </View>
+                )}
+                {activity.description && (
+                  <View style={styles.descriptionContainer}>
+                    <Text style={styles.description}>{activity.description}</Text>
+                  </View>
+                )}
+                {(activity.cost || activity.bookingReference) && (
+                  <View style={styles.additionalInfo}>
+                    {activity.cost && (
+                      <View style={styles.infoBadge}>
+                        {formatCurrency(activity.cost, { 
+                          fontSize: FONT_SIZES.body2,
+                          color: COLORS.textSecondary
+                        })}
+                      </View>
+                    )}
+                    {activity.bookingReference && (
+                      <View style={styles.infoBadge}>
+                        <MaterialIcons name="confirmation-number" size={16} color={COLORS.textSecondary} />
+                        <Text style={styles.infoText}>{activity.bookingReference}</Text>
+                      </View>
+                    )}
+                  </View>
+                )}
               </View>
             </View>
             <View style={styles.activityActions}>
@@ -81,42 +111,6 @@ export default function ActivityList({
               </TouchableOpacity>
             </View>
           </View>
-
-          <View style={styles.activityDetails}>
-            {activity.location && (
-              <View style={styles.detailRow}>
-                <Feather name="map-pin" size={16} color={COLORS.textSecondary} />
-                <Text style={styles.detailText}>{activity.location}</Text>
-              </View>
-            )}
-            {activity.startTime && activity.endTime && (
-              <View style={styles.detailRow}>
-                <Feather name="clock" size={16} color={COLORS.textSecondary} />
-                <Text style={styles.detailText}>
-                  {activity.startTime} - {activity.endTime}
-                </Text>
-              </View>
-            )}
-            {activity.description && (
-              <Text style={styles.description}>{activity.description}</Text>
-            )}
-            {activity.cost && (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailText}>
-                  {activity.cost.toLocaleString("en-IN", {
-                    style: "currency",
-                    currency: "INR",
-                  })}
-                </Text>
-              </View>
-            )}
-            {activity.bookingReference && (
-              <View style={styles.detailRow}>
-                <Feather name="hash" size={16} color={COLORS.textSecondary} />
-                <Text style={styles.detailText}>{activity.bookingReference}</Text>
-              </View>
-            )}
-          </View>
         </View>
       ))}
     </View>
@@ -129,20 +123,34 @@ const styles = StyleSheet.create({
   },
   activityContainer: {
     backgroundColor: COLORS.white,
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
     borderWidth: 1,
     borderColor: COLORS.lightGray,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   activityHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 8,
+    gap: 12,
+  },
+  categoryIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  activityContent: {
+    flex: 1,
   },
   activityTitleContainer: {
-    flex: 1,
-    marginRight: 8,
+    marginBottom: 8,
   },
   activityTitle: {
     fontSize: FONT_SIZES.body1,
@@ -154,32 +162,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
   },
-  statusBadge: {
+  categoryBadge: {
+    backgroundColor: COLORS.primaryLight,
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  priorityBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  statusText: {
-    color: COLORS.white,
+  categoryText: {
+    color: COLORS.primary,
     fontSize: FONT_SIZES.caption,
     fontFamily: FONTS.medium,
-  },
-  priorityText: {
-    color: COLORS.white,
-    fontSize: FONT_SIZES.caption,
-    fontFamily: FONTS.medium,
-  },
-  activityActions: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  actionButton: {
-    padding: 4,
   },
   activityDetails: {
     gap: 8,
@@ -194,9 +186,40 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     color: COLORS.text,
   },
+  descriptionContainer: {
+    marginTop: 4,
+  },
   description: {
     fontSize: FONT_SIZES.body2,
     fontFamily: FONTS.regular,
     color: COLORS.text,
+    lineHeight: 20,
+  },
+  additionalInfo: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 8,
+  },
+  infoBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.lightGray,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  infoText: {
+    fontSize: FONT_SIZES.caption,
+    fontFamily: FONTS.medium,
+    color: COLORS.text,
+  },
+  activityActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  actionButton: {
+    padding: 4,
   },
 }); 
