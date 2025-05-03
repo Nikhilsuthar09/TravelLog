@@ -23,7 +23,15 @@ export interface ItineraryActivity {
 }
 
 // Trip type used throughout the application
-export type Trip = {
+export interface TripNote {
+  id: string;
+  title: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Trip {
   id: string;
   title: string;
   destination: string;
@@ -36,4 +44,8 @@ export type Trip = {
   expenses?: string;
   categories?: string;
   budget?: number;
-};
+  notes: TripNote[];
+  packingList?: string;
+  createdAt: string;
+  updatedAt: string;
+}

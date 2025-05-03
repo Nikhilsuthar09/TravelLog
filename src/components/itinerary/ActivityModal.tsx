@@ -178,11 +178,7 @@ export default function ActivityModal({
             {/* Category Section */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Category</Text>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                style={styles.categoryScroll}
-              >
+              <View style={styles.categoryContainer}>
                 {ACTIVITY_CATEGORIES.map((cat) => (
                   <TouchableOpacity
                     key={cat}
@@ -202,7 +198,7 @@ export default function ActivityModal({
                     </Text>
                   </TouchableOpacity>
                 ))}
-              </ScrollView>
+              </View>
             </View>
 
             {/* Basic Information Section */}
@@ -383,13 +379,17 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
   },
+  categoryContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   categoryButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 8,
     backgroundColor: COLORS.lightGray,
-    marginRight: 8,
-    marginBottom: 16,
+    marginBottom: 4,
   },
   selectedCategory: {
     backgroundColor: COLORS.primary,
@@ -397,13 +397,10 @@ const styles = StyleSheet.create({
   categoryText: {
     color: COLORS.text,
     fontFamily: FONTS.regular,
-    fontSize: FONT_SIZES.button,
+    fontSize: FONT_SIZES.caption,
   },
   selectedCategoryText: {
     color: COLORS.white,
-  },
-  categoryScroll: {
-    marginBottom: 15,
   },
   modalFooter: {
     flexDirection: "row",

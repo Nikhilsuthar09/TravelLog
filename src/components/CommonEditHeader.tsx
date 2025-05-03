@@ -13,7 +13,7 @@ import { COLORS, FONTS, FONT_SIZES } from "@constants/theme";
 import { Feather } from "@expo/vector-icons";
 
 interface CommonEditHeaderProps {
-  scrollY: Animated.Value;
+  scrollY?: Animated.Value;
   title: string;
   onBackPress: () => void;
   onSavePress: () => void;
@@ -29,122 +29,70 @@ const CommonEditHeader: React.FC<CommonEditHeaderProps> = ({
   onSavePress,
 }) => {
   return (
-    <View style={styles.headerOuterContainer}>
+    <View style={styles.container}>
       <LinearGradient
-        colors={["#4E65FF", "#92EFFD"]}
+        colors={[COLORS.primary, COLORS.primaryLight]}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[StyleSheet.absoluteFill]}
-      />
-      
-      {/* Dark overlay */}
-      <View
-        style={[
-          StyleSheet.absoluteFill,
-          {
-            backgroundColor: 'rgba(0,0,0,0.1)',
-          }
-        ]}
-      />
-
-      {/* Main Header Content */}
-      <View style={styles.headerContent}>
-        {/* Back Button */}
-        <View style={styles.backButton}>
+        end={{ x: 1, y: 0 }}
+        style={styles.gradient}
+      >
+        <View style={styles.header}>
           <TouchableOpacity
+            style={styles.backButton}
             onPress={onBackPress}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Feather name="arrow-left" size={24} color={COLORS.primary} />
+            <Feather name="arrow-left" size={24} color={COLORS.white} />
           </TouchableOpacity>
-        </View>
-
-        {/* Title */}
-        <View style={styles.titleContainer}>
-          <Text style={styles.greeting}>{title}</Text>
-        </View>
-
-        {/* Save Button */}
-        <View style={styles.saveButton}>
+          <Text style={styles.headerTitle}>{title}</Text>
           <TouchableOpacity
+            style={styles.saveButton}
             onPress={onSavePress}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Text style={styles.saveButtonText}>Save</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </LinearGradient>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  headerOuterContainer: {
-    position: "absolute",
+  container: {
+    height: HEADER_HEIGHT,
+    width: '100%',
+    position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: HEADER_HEIGHT,
-    overflow: "hidden",
-    zIndex: 10,
+    zIndex: 1000,
   },
-  headerContent: {
-    position: 'absolute',
-    top: STATUS_BAR_HEIGHT,
-    left: 0,
-    right: 0,
-    height: HEADER_HEIGHT - STATUS_BAR_HEIGHT,
+  gradient: {
+    flex: 1,
+    paddingTop: STATUS_BAR_HEIGHT,
+  },
+  header: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-  },
-  titleContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingVertical: 12,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.white,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: COLORS.gray,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    padding: 8,
   },
-  saveButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 8,
-    backgroundColor: COLORS.white,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: COLORS.gray,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  greeting: {
-    fontSize: FONT_SIZES.h2,
+  headerTitle: {
+    fontSize: FONT_SIZES.h4,
     fontFamily: FONTS.bold,
     color: COLORS.white,
   },
+  saveButton: {
+    padding: 8,
+  },
   saveButtonText: {
-    color: COLORS.primary,
-    fontSize: FONT_SIZES.button,
+    fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.medium,
+    color: COLORS.white,
   },
 });
 

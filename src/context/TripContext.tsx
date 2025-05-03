@@ -7,6 +7,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 type TripContextType = {
   trips: Trip[];
   addTrip: (trip: Trip) => void;
+  updateTrip: (trip: Trip) => void;
   updateItinerary: (tripId:string, itinerary:string) => void;
   updateStructuredItinerary:(tripId:string, structuredItinerary:ItineraryDay[]) => void;
   updatePacking: (tripId:string, packing:string) => void;
@@ -97,11 +98,20 @@ export const TripProvider = ({ children }: Props) => {
     );
   };
 
+  const updateTrip = (updatedTrip: Trip) => {
+    setTrips((currentTrips) =>
+      currentTrips.map((trip) =>
+        trip.id === updatedTrip.id ? updatedTrip : trip
+      )
+    );
+  };
+
   return (
     <TripContext.Provider
       value={{
         trips,
         addTrip,
+        updateTrip,
         updateItinerary,
         updateStructuredItinerary,
         updatePacking,

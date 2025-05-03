@@ -5,6 +5,7 @@ import TripDetailsScreen from "@screens/TripDetailsScreen";
 import EditItineraryScreen from "@screens/EditItineraryScreen";
 import EditPackingScreen from "@screens/EditPackingScreen";
 import EditExpensesScreen from "@screens/EditExpensesScreen";
+import EditNotesScreen from '@screens/EditNotesScreen';
 import { Trip } from "types";
 import { NavigatorScreenParams } from "@react-navigation/native";
 import SplashScreen from "@screens/SplashScreen";
@@ -18,6 +19,7 @@ export type RootStackParamList = {
   EditItinerary: { tripId: string };
   EditPacking: { tripId: string };
   EditExpenses: { tripId: string };
+  EditNotes: { tripId: string };
   Weather: { tripId: string };
   QuickNotes: { tripId: string };
 }
@@ -53,6 +55,11 @@ export default function AppNavigator(){
       name="EditExpenses"
       component={EditExpensesScreen}
       options={{title: "Edit Expenses"}}/>
+
+      <Stack.Screen 
+      name="EditNotes"
+      component={EditNotesScreen}
+      options={{title: "Edit Notes"}}/>
     </Stack.Navigator>
   )
 }

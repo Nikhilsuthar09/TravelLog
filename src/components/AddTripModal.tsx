@@ -25,16 +25,17 @@ const generateUniqueId = () => {
 interface Props {
   visible: boolean;
   onClose: () => void;
-  onConfirm: (trip: Omit<Trip, 'id'> & { id?: string }) => void;
+  onConfirm: (trip: Trip) => void;
+  trip?: Trip;
 }
 
-export default function AddTripModal({ visible, onClose, onConfirm }: Props) {
-  const [tripTitle, setTripTitle] = useState("");
-  const [destination, setDestination] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [imageUri, setimageUri] = useState<string | undefined>(undefined)
-  const [budget, setBudget] = useState("")
+export default function AddTripModal({ visible, onClose, onConfirm, trip }: Props) {
+  const [tripTitle, setTripTitle] = useState(trip?.title || "");
+  const [destination, setDestination] = useState(trip?.destination || "");
+  const [startDate, setStartDate] = useState(trip?.startDate || "");
+  const [endDate, setEndDate] = useState(trip?.endDate || "");
+  const [imageUri, setimageUri] = useState<string | undefined>(trip?.imageUri)
+  const [budget, setBudget] = useState(trip?.budget ? trip.budget.toString() : "")
 
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -65,18 +66,26 @@ export default function AddTripModal({ visible, onClose, onConfirm }: Props) {
   const handleConfirm = () => {
     if (!tripTitle || !destination || !startDate || !endDate) return;
     const defaultCategories = JSON.stringify(['Food', 'Petrol','Hotel', 'Travel'])
-    const newTrip = {
-      id: generateUniqueId(),
+    const newTrip: Trip = {
+      id: trip?.id || generateUniqueId(),
       title: tripTitle,
       destination,
       startDate,
       endDate,
       imageUri,
-      budget:budget ? parseFloat(budget) : undefined,
-      categories: defaultCategories
+      budget: budget ? parseFloat(budget) : undefined,
+      categories: trip?.categories || defaultCategories,
+      itinerary: trip?.itinerary || "",
+      packing: trip?.packing || "",
+      expenses: trip?.expenses || "",
+      notes: trip?.notes || [],
+      createdAt: trip?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }
     onConfirm(newTrip);
-    addTrip(newTrip)
+    if (!trip?.id) {
+      addTrip(newTrip);
+    }
     setTripTitle("");
     setDestination("");
     setStartDate("");
@@ -98,7 +107,7 @@ export default function AddTripModal({ visible, onClose, onConfirm }: Props) {
     backdropTransitionOutTiming={0}
     >
         <View style={styles.modal}>
-          <Text style={styles.heading}>Add Trip</Text>
+          <Text style={styles.heading}>{trip ? "Edit Trip" : "Add Trip"}</Text>
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
             <TextInput
               style={styles.input}
