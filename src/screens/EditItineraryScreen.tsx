@@ -175,30 +175,17 @@ export default function EditItineraryScreen() {
 
   // Delete an activity from a day
   const handleDeleteActivity = (dayId: string, activityId: string) => {
-    Alert.alert(
-      "Delete Activity",
-      "Are you sure you want to delete this activity?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            setDays(
-              days.map((day) =>
-                day.id === dayId
-                  ? {
-                      ...day,
-                      activities: day.activities.filter(
-                        (a) => a.id !== activityId
-                      ),
-                    }
-                  : day
-              )
-            );
-          },
-        },
-      ]
+    setDays(
+      days.map((day) =>
+        day.id === dayId
+          ? {
+              ...day,
+              activities: day.activities.filter(
+                (a) => a.id !== activityId
+              ),
+            }
+          : day
+      )
     );
   };
 

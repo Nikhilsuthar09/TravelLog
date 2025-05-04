@@ -37,6 +37,7 @@ interface PackingItem {
   name: string;
   quantity: number;
   isPacked: boolean;
+  note?: string;
 }
 
 // Constants
@@ -435,12 +436,19 @@ export default function TripDetailsScreen() {
                 styles.packingItemStatus,
                 item.isPacked ? styles.packingItemPacked : styles.packingItemNotPacked
               ]} />
-              <Text style={[
-                styles.packingItemText,
-                item.isPacked && styles.packingItemTextPacked
-              ]}>
-                {item.name} {item.quantity > 1 ? `(${item.quantity})` : ''}
-              </Text>
+              <View style={styles.packingItemContent}>
+                <Text style={[
+                  styles.packingItemText,
+                  item.isPacked && styles.packingItemTextPacked
+                ]}>
+                  {item.name} {item.quantity > 1 ? `(${item.quantity})` : ''}
+                </Text>
+                {item.note && (
+                  <Text style={styles.packingItemNote}>
+                    {item.note}
+                  </Text>
+                )}
+              </View>
             </View>
           ))}
         </View>
@@ -1013,7 +1021,7 @@ const styles = StyleSheet.create({
   },
   packingItem: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
@@ -1030,6 +1038,10 @@ const styles = StyleSheet.create({
   packingItemNotPacked: {
     backgroundColor: COLORS.lightGray,
   },
+  packingItemContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
   packingItemText: {
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.body2,
@@ -1038,6 +1050,13 @@ const styles = StyleSheet.create({
   packingItemTextPacked: {
     textDecorationLine: 'line-through',
     color: COLORS.gray,
+  },
+  packingItemNote: {
+    fontFamily: FONTS.regular,
+    fontSize: FONT_SIZES.caption,
+    color: COLORS.textSecondary,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   itineraryContainer: {
     gap: 16,

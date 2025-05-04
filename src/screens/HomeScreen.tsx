@@ -133,7 +133,11 @@ export default function HomeScreen() {
         handleNavigateToPacking();
         break;
       case 'notes':
-        navigation.navigate('Tabs', { screen: 'Notes' });
+        if (upcomingTrip) {
+          navigation.navigate('EditNotes', { tripId: upcomingTrip.id });
+        } else {
+          navigation.navigate('Tabs', { screen: 'Trips' });
+        }
         break;
       case 'weather':
         if (upcomingTrip) {
