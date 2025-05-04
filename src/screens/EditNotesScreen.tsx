@@ -18,6 +18,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import CommonEditHeader, { HEADER_CONFIG } from '../components/CommonEditHeader';
 import { Trip, TripNote } from '../types';
 import { Feather } from '@expo/vector-icons';
+import DeleteConfirmationModal from '../components/common/DeleteConfirmationModal';
 
 export default function EditNotesScreen() {
   const route = useRoute();
@@ -29,6 +30,8 @@ export default function EditNotesScreen() {
   const [notes, setNotes] = useState<TripNote[]>(Array.isArray(trip?.notes) ? trip.notes : []);
   const scrollY = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef<ScrollView>(null);
+  const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const handleAddNote = () => {
     const newNote: TripNote = {
@@ -46,7 +49,16 @@ export default function EditNotesScreen() {
   };
 
   const handleDeleteNote = (noteId: string) => {
-    setNotes(notes.filter(note => note.id !== noteId));
+    setNoteToDelete(noteId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteNote = () => {
+    if (noteToDelete) {
+      setNotes(notes.filter(note => note.id !== noteToDelete));
+      setNoteToDelete(null);
+      setShowDeleteModal(false);
+    }
   };
 
   const handleUpdateNote = (noteId: string, field: 'title' | 'description', value: string) => {
@@ -154,6 +166,17 @@ export default function EditNotesScreen() {
           <Text style={styles.addButtonText}>Add New Note</Text>
         </TouchableOpacity>
       </Animated.ScrollView>
+
+      <DeleteConfirmationModal
+        visible={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setNoteToDelete(null);
+        }}
+        onConfirm={confirmDeleteNote}
+        title="Delete Note"
+        message="Are you sure you want to delete this note? This action cannot be undone."
+      />
     </KeyboardAvoidingView>
   );
 }
