@@ -18,7 +18,7 @@ import { useTrip } from "@context/TripContext";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@navigation/AppNavigator";
 import { useNavigation } from "@react-navigation/native";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { Trip } from "@types";
 import AnimatedHeader, { HEADER_CONFIG } from "../components/AnimatedHeader";
 import LogoutModal from '../components/LogoutModal';
@@ -126,8 +126,12 @@ export default function HomeScreen() {
       case 'add':
         handleAddTrip();
         break;
-      case 'trips':
-        handleNavigateTotrips();
+      case 'itinerary':
+        if (upcomingTrip) {
+          navigation.navigate('EditItinerary', { tripId: upcomingTrip.id });
+        } else {
+          navigation.navigate('Tabs', { screen: 'Trips' });
+        }
         break;
       case 'packing':
         handleNavigateToPacking();
@@ -139,16 +143,11 @@ export default function HomeScreen() {
           navigation.navigate('Tabs', { screen: 'Trips' });
         }
         break;
-      case 'weather':
+      case 'expenses':
         if (upcomingTrip) {
-          navigation.navigate("TripDetails", {
-            id: upcomingTrip.id,
-            title: upcomingTrip.title,
-            destination: upcomingTrip.destination,
-            startDate: upcomingTrip.startDate,
-            endDate: upcomingTrip.endDate,
-            imageUri: upcomingTrip.imageUri ?? "",
-          });
+          navigation.navigate('EditExpenses', { tripId: upcomingTrip.id });
+        } else {
+          navigation.navigate('Tabs', { screen: 'Trips' });
         }
         break;
       case 'share':
@@ -326,18 +325,18 @@ export default function HomeScreen() {
 
                 <TouchableOpacity
                   style={[styles.quickActionButton, styles.cardShadow]}
-                  onPress={() => handleQuickAction('trips')}
+                  onPress={() => handleQuickAction('itinerary')}
                   activeOpacity={0.8}
-                  disabled={loadingAction === 'trips'}
+                  disabled={loadingAction === 'itinerary' || !upcomingTrip}
                 >
                   <View style={styles.actionIconContainer}>
-                    {loadingAction === 'trips' ? (
+                    {loadingAction === 'itinerary' ? (
                       <ActivityIndicator color={COLORS.primary} />
                     ) : (
-                      <Feather name="map" size={20} color={COLORS.primary} />
+                      <Feather name="calendar" size={20} color={COLORS.primary} />
                     )}
                   </View>
-                  <Text style={styles.actionText}>My Trips</Text>
+                  <Text style={styles.actionText}>Itinerary</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -358,18 +357,18 @@ export default function HomeScreen() {
 
                 <TouchableOpacity
                   style={[styles.quickActionButton, styles.cardShadow]}
-                  onPress={() => handleQuickAction('weather')}
+                  onPress={() => handleQuickAction('expenses')}
                   activeOpacity={0.8}
-                  disabled={loadingAction === 'weather' || !upcomingTrip}
+                  disabled={loadingAction === 'expenses' || !upcomingTrip}
                 >
                   <View style={styles.actionIconContainer}>
-                    {loadingAction === 'weather' ? (
+                    {loadingAction === 'expenses' ? (
                       <ActivityIndicator color={COLORS.primary} />
                     ) : (
-                      <Feather name="cloud" size={20} color={COLORS.primary} />
+                      <MaterialIcons name="currency-rupee" size={20} color={COLORS.primary} />
                     )}
                   </View>
-                  <Text style={styles.actionText}>Weather</Text>
+                  <Text style={styles.actionText}>Expenses</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
