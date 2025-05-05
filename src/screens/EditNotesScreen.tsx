@@ -119,7 +119,7 @@ export default function EditNotesScreen() {
         scrollEventThrottle={1}
         contentContainerStyle={[
           styles.content,
-          { paddingTop: HEADER_CONFIG.HEIGHT }
+          { paddingTop: HEADER_CONFIG.HEIGHT + 16 }
         ]}
         keyboardShouldPersistTaps="handled"
       >
@@ -190,6 +190,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 16,
     paddingBottom: 32,
+    paddingTop: HEADER_CONFIG.HEIGHT + 16,
   },
   noteContainer: {
     backgroundColor: COLORS.white,

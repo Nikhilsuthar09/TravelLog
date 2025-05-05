@@ -43,4 +43,16 @@ export default function EditPackingListScreen() {
   );
 }
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+    paddingTop: HEADER_CONFIG.HEIGHT + 16, // Add padding to account for header height
+  },
+});
+
 // ... existing styles ... 

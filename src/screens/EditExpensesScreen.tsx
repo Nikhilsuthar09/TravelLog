@@ -7,7 +7,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { useTrip } from '../context/TripContext';
 import AddExpenseForm from '../components/AddExpenseForm';
 import ExpenseItem from '../components/ExpenseItem';
-import CommonEditHeader from '../components/CommonEditHeader';
+import CommonEditHeader, { HEADER_CONFIG } from '../components/CommonEditHeader';
 import { Animated } from 'react-native';
 import DeleteConfirmationModal from "../components/common/DeleteConfirmationModal";
 import { formatCurrency, formatCurrencyString } from '@utils/currency';
@@ -205,7 +205,7 @@ export default function EditExpensesScreen() {
         )}
         keyExtractor={item => item.id}
         ListHeaderComponent={
-          <View style={styles.header}>
+          <View style={[styles.header, { paddingTop: HEADER_CONFIG.HEIGHT + 16 }]}>
             <View style={styles.budgetContainer}>
               <Text style={styles.budgetLabel}>Trip Budget</Text>
               <View>
@@ -243,6 +243,8 @@ export default function EditExpensesScreen() {
         )}
         scrollEventThrottle={16}
         contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={true}
+        bounces={true}
       />
     </View>
   );
