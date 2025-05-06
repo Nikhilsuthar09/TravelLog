@@ -8,10 +8,10 @@ import {
   View,
   Text,
   StyleSheet,
-  KeyboardAvoidingView,
   Platform,
   StatusBar,
-  Animated,
+  Keyboard,
+  ScrollView,
 } from "react-native";
 import AddItemForm from "../components/packing/AddItemForm";
 import PackingItem from "../components/packing/PackingItem";
@@ -35,7 +35,8 @@ export default function EditPackingScreen() {
   const { tripId } = route.params;
   const { trips, updatePacking } = useTrip();
   const trip = trips.find((t) => t.id === tripId);
-  const scrollY = useRef(new Animated.Value(0)).current;
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const [packingItems, setPackingItems] = useState<PackingItem[]>([]);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -54,6 +55,26 @@ export default function EditPackingScreen() {
       }
     }
   }, [trip]);
+
+  useEffect(() => {
+    const keyboardWillShow = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height);
+      }
+    );
+    const keyboardWillHide = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      keyboardWillShow.remove();
+      keyboardWillHide.remove();
+    };
+  }, []);
 
   const handleSave = () => {
     updatePacking(tripId, JSON.stringify(packingItems));
@@ -121,6 +142,17 @@ export default function EditPackingScreen() {
   const packedItemsCount = packingItems.filter((item) => item.isPacked).length;
   const totalItemsCount = packingItems.length;
 
+  const renderHeader = () => (
+    <View>
+      <Text style={styles.title}>Packing List for {trip?.title || 'Trip'}</Text>
+      <ProgressBar
+        packedItems={packedItemsCount}
+        totalItems={totalItemsCount}
+      />
+      <AddItemForm onAddItem={addItem} />
+    </View>
+  );
+
   if (!trip) {
     return (
       <View style={styles.container}>
@@ -128,20 +160,6 @@ export default function EditPackingScreen() {
       </View>
     );
   }
-
-  const renderHeader = () => (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={100}
-    >
-      <Text style={styles.title}>Packing List for {trip.title}</Text>
-      <ProgressBar
-        packedItems={packedItemsCount}
-        totalItems={totalItemsCount}
-      />
-      <AddItemForm onAddItem={addItem} />
-    </KeyboardAvoidingView>
-  );
 
   return (
     <View style={styles.container}>
@@ -152,7 +170,6 @@ export default function EditPackingScreen() {
       />
 
       <CommonEditHeader
-        scrollY={scrollY}
         title="Packing List"
         onBackPress={() => navigation.goBack()}
         onSavePress={handleSave}
@@ -166,10 +183,20 @@ export default function EditPackingScreen() {
         message="Are you sure you want to delete this item? This action cannot be undone."
       />
 
-      <Animated.FlatList
-        data={packingItems}
-        renderItem={({ item }) => (
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: keyboardHeight + 20 }
+        ]}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="none"
+      >
+        {renderHeader()}
+        {packingItems.map((item) => (
           <PackingItem
+            key={item.id}
             id={item.id}
             name={item.name}
             quantity={item.quantity}
@@ -180,16 +207,8 @@ export default function EditPackingScreen() {
             onUpdateNote={updateItemNote}
             onDelete={handleDeleteClick}
           />
-        )}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={renderHeader}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
-        scrollEventThrottle={1}
-        contentContainerStyle={styles.content}
-      />
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -198,6 +217,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
     padding: 20,

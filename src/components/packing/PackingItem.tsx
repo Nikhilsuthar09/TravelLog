@@ -1,7 +1,7 @@
 import { COLORS, FONTS, FONT_SIZES } from "@constants/theme";
 import { Feather } from "@expo/vector-icons";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from "react-native";
-import { useState } from "react";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Pressable } from "react-native";
+import { useState, useRef, useEffect } from "react";
 
 interface PackingItemProps {
   id: string;
@@ -27,6 +27,20 @@ export default function PackingItem({
   onDelete,
 }: PackingItemProps) {
   const [isNoteVisible, setIsNoteVisible] = useState(false);
+  const noteInputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    if (isNoteVisible) {
+      const timer = setTimeout(() => {
+        noteInputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isNoteVisible]);
+
+  const handleNoteToggle = () => {
+    setIsNoteVisible(!isNoteVisible);
+  };
 
   return (
     <View style={styles.container}>
@@ -62,16 +76,16 @@ export default function PackingItem({
             <Text style={styles.quantityLabel}>qty</Text>
           </View>
 
-          <TouchableOpacity 
+          <Pressable 
             style={styles.noteButton} 
-            onPress={() => setIsNoteVisible(!isNoteVisible)}
+            onPress={handleNoteToggle}
           >
             <Feather 
               name={isNoteVisible ? "chevron-up" : "chevron-down"} 
               size={20} 
               color={COLORS.textSecondary} 
             />
-          </TouchableOpacity>
+          </Pressable>
 
           <TouchableOpacity style={styles.deleteButton} onPress={() => onDelete(id)}>
             <Feather name="trash-2" size={20} color={COLORS.danger} />
@@ -81,12 +95,18 @@ export default function PackingItem({
         {isNoteVisible && (
           <View style={styles.noteContainer}>
             <TextInput
+              ref={noteInputRef}
               style={styles.noteInput}
               value={note}
               onChangeText={(text) => onUpdateNote(id, text)}
               placeholder="Add a note..."
               placeholderTextColor={COLORS.textSecondary}
               multiline
+              blurOnSubmit={false}
+              autoFocus={true}
+              scrollEnabled={true}
+              textAlignVertical="top"
+              returnKeyType="default"
             />
           </View>
         )}
@@ -178,5 +198,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     color: COLORS.text,
     minHeight: 40,
+    maxHeight: 100,
   },
 }); 
