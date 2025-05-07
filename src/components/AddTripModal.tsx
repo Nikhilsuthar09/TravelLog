@@ -64,7 +64,9 @@ export default function AddTripModal({ visible, onClose, onConfirm, trip }: Prop
 
   const { addTrip } = useTrip();
   const handleConfirm = () => {
-    if (!tripTitle || !destination || !startDate || !endDate) return;
+    if (!tripTitle || !destination || !startDate || !endDate) {
+      return;
+    }
     const defaultCategories = JSON.stringify(['Food', 'Petrol','Hotel', 'Travel'])
     const newTrip: Trip = {
       id: trip?.id || generateUniqueId(),

@@ -50,7 +50,9 @@ export const TripProvider = ({ children }: Props) => {
   }, [user]);
 
   const addTrip = async (trip: Trip) => {
-    if (!user) throw new Error("User must be logged in to add trips");
+    if (!user) {
+      throw new Error("User must be logged in to add trips");
+    }
     
     const tripWithUser = {
       ...trip,
@@ -58,8 +60,17 @@ export const TripProvider = ({ children }: Props) => {
       createdAt: new Date().toISOString(),
     };
 
-    const tripRef = doc(collection(db, "trips"));
-    await setDoc(tripRef, { ...tripWithUser, id: tripRef.id });
+    try {
+      // Remove undefined values from the trip object
+      const cleanTripData = Object.fromEntries(
+        Object.entries(tripWithUser).filter(([_, value]) => value !== undefined)
+      );
+
+      const tripRef = doc(collection(db, "trips"));
+      await setDoc(tripRef, { ...cleanTripData, id: tripRef.id });
+    } catch (error) {
+      throw error;
+    }
   };
 
   const deleteTrip = async (id: string) => {

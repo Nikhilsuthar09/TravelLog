@@ -13,6 +13,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import { formatCurrency, formatCurrencyString } from '@utils/currency';
 import AddTripModal from '../components/AddTripModal';
+import { shareTrip } from '@utils/shareTrip';
 
 // Types
 type RouteParams = {
@@ -231,30 +232,8 @@ export default function TripDetailsScreen() {
   // Handlers
   const handleShareTrip = async () => {
     try {
-      const shareMessage = `Check out my trip to ${trip.destination}!\n\n` +
-        `Trip: ${trip.title}\n` +
-        `Dates: ${formatDate(trip.startDate)} → ${formatDate(trip.endDate)}\n\n` +
-        `Itinerary: ${trip.itinerary ? '✓' : '✗'}\n` +
-        `Packing List: ${trip.packing ? '✓' : '✗'}\n` +
-        `Expenses: ${trip.expenses ? '✓' : '✗'}\n\n` +
-        `Shared via TravelLog App`;
-
-      const result = await Share.share({
-        message: shareMessage,
-        title: `My Trip to ${trip.destination}`,
-      });
-
-      if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          console.log('Shared with activity type:', result.activityType);
-        } else {
-          console.log('Shared successfully');
-        }
-      } else if (result.action === Share.dismissedAction) {
-        console.log('Share dismissed');
-      }
+      await shareTrip(trip);
     } catch (error) {
-      console.error('Error sharing trip:', error);
       Alert.alert('Error', 'Failed to share trip. Please try again.');
     }
   };

@@ -24,6 +24,8 @@ import AnimatedHeader, { HEADER_CONFIG } from "../components/AnimatedHeader";
 import LogoutModal from '../components/LogoutModal';
 import { useAuth } from '@context/AuthContext';
 import * as Haptics from 'expo-haptics';
+import { Share } from 'react-native';
+import { shareTrip } from '@utils/shareTrip';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -152,16 +154,13 @@ export default function HomeScreen() {
         break;
       case 'share':
         if (upcomingTrip) {
-          Alert.alert(
-            "Share Trip",
-            "Share your trip details with friends and family",
-            [
-              { text: "Cancel", style: "cancel" },
-              { text: "Share", onPress: () => {
-                // Implement sharing logic
-              }}
-            ]
-          );
+          try {
+            await shareTrip(upcomingTrip);
+          } catch (error) {
+            Alert.alert('Error', 'Failed to share trip. Please try again.');
+          }
+        } else {
+          navigation.navigate('Tabs', { screen: 'Trips' });
         }
         break;
     }
