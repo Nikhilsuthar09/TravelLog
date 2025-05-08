@@ -1,7 +1,16 @@
+import { COLORS } from "@constants/theme";
 import CommonEditHeader, { HEADER_CONFIG } from "../components/CommonEditHeader";
+import { Animated, StatusBar, StyleSheet, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 export default function EditPackingListScreen() {
-  // ... existing state and handlers ...
+  const navigation = useNavigation<NativeStackNavigationProp<any>>();
+  const scrollY = new Animated.Value(0);
+
+  const handleSave = () => {
+    // Your existing save logic here
+  };
 
   return (
     <View style={styles.container}>
@@ -34,7 +43,7 @@ export default function EditPackingListScreen() {
         scrollEventThrottle={1}
         contentContainerStyle={[
           styles.content,
-          { paddingTop: HEADER_CONFIG.MAX_HEIGHT }
+          { paddingTop: HEADER_CONFIG.HEIGHT }
         ]}
       >
         {/* ... rest of the content ... */}

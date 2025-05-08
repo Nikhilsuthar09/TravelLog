@@ -1,5 +1,5 @@
 // src/screens/HomeScreen.tsx
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -37,9 +37,33 @@ export default function HomeScreen() {
   const { trips } = useTrip();
   const scrollY = useRef(new Animated.Value(0)).current;
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { signOut, user } = useAuth();
+  const { signOut, user, loading: authLoading } = useAuth();
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [showTooltip, setShowTooltip] = useState(true);
+
+  // Redirect to auth screen if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Auth' }],
+      });
+    }
+  }, [user, authLoading, navigation]);
+
+  // Show loading screen while checking auth state
+  if (authLoading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  // Don't render anything if not authenticated
+  if (!user) {
+    return null;
+  }
 
   // get current date
   const today = new Date();
@@ -109,13 +133,17 @@ export default function HomeScreen() {
     setShowLogoutModal(true);
   };
 
-  const handleLogout = () => {
-    signOut();
-    setShowLogoutModal(false);
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Auth' }],
-    });
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      setShowLogoutModal(false);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Auth' }],
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to sign out. Please try again.');
+    }
   };
 
   const handleQuickAction = async (action: string) => {
@@ -698,5 +726,9 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     color: COLORS.textSecondary,
     marginTop: 2,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

@@ -250,7 +250,7 @@ export default function TripDetailsScreen() {
 
   // Render Functions
   const renderItineraryContent = () => {
-    if (!trip.itinerary && !trip.structuredItinerary) {
+    if (!trip.structuredItinerary) {
       return (
         <View style={styles.emptyContentContainer}>
           <Feather name="calendar" size={40} color={COLORS.gray} />
@@ -264,114 +264,109 @@ export default function TripDetailsScreen() {
       );
     }
 
-    if (trip.structuredItinerary) {
-      try {
-        const structuredItinerary = JSON.parse(trip.structuredItinerary);
-        return (
-          <View style={styles.itineraryContainer}>
-            {structuredItinerary.map((day: any) => (
-              <View key={day.id} style={styles.dayCard}>
-                <View style={styles.dayHeader}>
-                  <Text style={styles.dayNumber}>Day {day.dayNumber}</Text>
-                  <Text style={styles.dayDate}>
-                    {new Date(day.date).toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                  </Text>
-                </View>
-                {day.activities.length > 0 ? (
-                  <View style={styles.activitiesContainer}>
-                    {day.activities.map((activity: any) => (
-                      <View key={activity.id} style={styles.activityCard}>
-                        <View style={styles.activityHeader}>
-                          <View style={styles.activityIconContainer}>
-                            <MaterialIcons
-                              name={getCategoryIcon(activity.category)}
-                              size={24}
-                              color={COLORS.primary}
-                            />
-                          </View>
-                          <View style={styles.activityTitleContainer}>
-                            <Text style={styles.activityTitle}>{activity.title}</Text>
-                            <View style={styles.activityMeta}>
-                              <View style={styles.categoryBadge}>
-                                <Text style={styles.categoryText}>{activity.category}</Text>
-                              </View>
-                            </View>
-                          </View>
+    try {
+      const structuredItinerary = JSON.parse(trip.structuredItinerary);
+      return (
+        <View style={styles.itineraryContainer}>
+          {structuredItinerary.map((day: any) => (
+            <View key={day.id} style={styles.dayCard}>
+              <View style={styles.dayHeader}>
+                <Text style={styles.dayNumber}>Day {day.dayNumber}</Text>
+                <Text style={styles.dayDate}>
+                  {new Date(day.date).toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </Text>
+              </View>
+              {day.activities.length > 0 ? (
+                <View style={styles.activitiesContainer}>
+                  {day.activities.map((activity: any) => (
+                    <View key={activity.id} style={styles.activityCard}>
+                      <View style={styles.activityHeader}>
+                        <View style={styles.activityIconContainer}>
+                          <MaterialIcons
+                            name={getCategoryIcon(activity.category)}
+                            size={24}
+                            color={COLORS.primary}
+                          />
                         </View>
-
-                        <View style={styles.activityDetails}>
-                          {activity.location && (
-                            <View style={styles.detailRow}>
-                              <MaterialIcons name="location-on" size={16} color={COLORS.textSecondary} />
-                              <Text style={styles.detailText}>{activity.location}</Text>
+                        <View style={styles.activityTitleContainer}>
+                          <Text style={styles.activityTitle}>{activity.title}</Text>
+                          <View style={styles.activityMeta}>
+                            <View style={styles.categoryBadge}>
+                              <Text style={styles.categoryText}>{activity.category}</Text>
                             </View>
-                          )}
-                          {activity.startTime && activity.endTime && (
-                            <View style={styles.detailRow}>
-                              <MaterialIcons name="access-time" size={16} color={COLORS.textSecondary} />
-                              <Text style={styles.detailText}>
-                                {activity.startTime} - {activity.endTime}
-                              </Text>
-                            </View>
-                          )}
-                          {activity.description && (
-                            <View style={styles.descriptionContainer}>
-                              <Text style={styles.description}>{activity.description}</Text>
-                            </View>
-                          )}
-                          {(activity.cost || activity.bookingReference) && (
-                            <View style={styles.additionalInfo}>
-                              {activity.cost && (
-                                <View style={styles.infoBadge}>
-                                  <MaterialIcons name="currency-rupee" size={16} color={COLORS.textSecondary} />
-                                  <Text style={styles.infoText}>
-                                    {activity.cost.toLocaleString("en-IN", {
-                                      maximumFractionDigits: 2,
-                                      minimumFractionDigits: 2
-                                    })}
-                                  </Text>
-                                </View>
-                              )}
-                              {activity.bookingReference && (
-                                <View style={styles.infoBadge}>
-                                  <MaterialIcons name="confirmation-number" size={16} color={COLORS.textSecondary} />
-                                  <Text style={styles.infoText}>{activity.bookingReference}</Text>
-                                </View>
-                              )}
-                            </View>
-                          )}
+                          </View>
                         </View>
                       </View>
-                    ))}
-                  </View>
-                ) : (
-                  <View style={styles.noActivitiesContainer}>
-                    <Text style={styles.noActivitiesText}>No activities planned for this day</Text>
-                  </View>
-                )}
-              </View>
-            ))}
-          </View>
-        );
-      } catch (error) {
-        console.error("Failed to parse structured itinerary:", error);
-        return (
-          <View>
-            <Text style={styles.tabContentText}>{trip.itinerary}</Text>
-          </View>
-        );
-      }
-    }
 
-    return (
-      <View>
-        <Text style={styles.tabContentText}>{trip.itinerary}</Text>
-      </View>
-    );
+                      <View style={styles.activityDetails}>
+                        {activity.location && (
+                          <View style={styles.detailRow}>
+                            <MaterialIcons name="location-on" size={16} color={COLORS.textSecondary} />
+                            <Text style={styles.detailText}>{activity.location}</Text>
+                          </View>
+                        )}
+                        {activity.startTime && activity.endTime && (
+                          <View style={styles.detailRow}>
+                            <MaterialIcons name="access-time" size={16} color={COLORS.textSecondary} />
+                            <Text style={styles.detailText}>
+                              {activity.startTime} - {activity.endTime}
+                            </Text>
+                          </View>
+                        )}
+                        {activity.description && (
+                          <View style={styles.descriptionContainer}>
+                            <Text style={styles.description}>{activity.description}</Text>
+                          </View>
+                        )}
+                        {(activity.cost || activity.bookingReference) && (
+                          <View style={styles.additionalInfo}>
+                            {activity.cost && (
+                              <View style={styles.infoBadge}>
+                                <MaterialIcons name="currency-rupee" size={16} color={COLORS.textSecondary} />
+                                <Text style={styles.infoText}>
+                                  {activity.cost.toLocaleString("en-IN", {
+                                    maximumFractionDigits: 2,
+                                    minimumFractionDigits: 2
+                                  })}
+                                </Text>
+                              </View>
+                            )}
+                            {activity.bookingReference && (
+                              <View style={styles.infoBadge}>
+                                <MaterialIcons name="confirmation-number" size={16} color={COLORS.textSecondary} />
+                                <Text style={styles.infoText}>{activity.bookingReference}</Text>
+                              </View>
+                            )}
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.noActivitiesContainer}>
+                  <Text style={styles.noActivitiesText}>No activities planned for this day</Text>
+                </View>
+              )}
+            </View>
+          ))}
+        </View>
+      );
+    } catch (error) {
+      console.error("Failed to parse structured itinerary:", error);
+      return (
+        <View style={styles.emptyContentContainer}>
+          <Feather name="alert-circle" size={40} color={COLORS.gray} />
+          <Text style={styles.emptyContentText}>
+            Error loading itinerary
+          </Text>
+        </View>
+      );
+    }
   };
 
   const renderPackingContent = () => {
@@ -642,12 +637,10 @@ export default function TripDetailsScreen() {
             {renderItineraryContent()}
             <TouchableOpacity
               style={styles.editButton}
-              onPress={() => {
-                navigation.navigate("EditItinerary", { tripId: trip.id });
-              }}
+              onPress={() => navigation.navigate("EditItinerary", { tripId: trip.id })}
             >
               <Text style={styles.editButtonText}>
-                {trip.itinerary ? "Edit Itinerary" : "Add Itinerary"}
+                {trip.structuredItinerary ? "Edit Itinerary" : "Add Itinerary"}
               </Text>
             </TouchableOpacity>
           </ScrollView>
@@ -712,12 +705,12 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 250,
+    height: 230,
     resizeMode: "cover",
   },
   headerContainer: {
     position: 'relative',
-    height: 250,
+    height: 230,
   },
   headerOverlay: {
     position: 'absolute',
@@ -741,12 +734,12 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   title: {
-    fontSize: FONT_SIZES.h2,
+    fontSize: FONT_SIZES.h3,
     fontFamily: FONTS.bold,
     color: COLORS.white,
   },
   destination: {
-    fontSize: FONT_SIZES.h4,
+    fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.medium,
     color: COLORS.white,
   },
@@ -755,7 +748,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   date: {
-    fontSize: FONT_SIZES.body2,
+    fontSize: FONT_SIZES.caption,
     fontFamily: FONTS.medium,
     color: COLORS.white,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -796,7 +789,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   tabButton: {
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 20,
     marginRight: 8,
     borderBottomWidth: 2,
@@ -811,7 +804,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontFamily: FONTS.medium,
-    fontSize: FONT_SIZES.body2,
+    fontSize: FONT_SIZES.body3,
     color: COLORS.textSecondary,
     marginLeft: 4,
   },

@@ -16,8 +16,8 @@ export interface ItineraryActivity {
   startTime?: string;
   endTime?: string;
   category: string;
-  status: "planned" | "confirmed" | "completed";
-  priority: "low" | "medium" | "high";
+  // status: "planned" | "confirmed" | "completed";
+  // priority: "low" | "medium" | "high";
   cost?: number;
   bookingReference?: string;
 }
@@ -38,7 +38,6 @@ export interface Trip {
   startDate: string;
   endDate: string;
   imageUri?: string;
-  itinerary?: string;
   structuredItinerary?: string;
   packing?: string;
   expenses?: string;

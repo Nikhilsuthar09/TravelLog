@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { auth } from '../config/firebase';
-import { User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from 'firebase/auth';
+import { User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, setPersistence, inMemoryPersistence } from 'firebase/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -17,12 +17,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // For Expo/React Native, we'll use inMemoryPersistence
+    // This will keep the user logged in during the app session
+    setPersistence(auth, inMemoryPersistence)
+      .catch((error) => {
+        console.error("Error setting auth persistence:", error);
+      });
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
     });
 
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
@@ -65,6 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleSignOut = async () => {
     try {
       await signOut(auth);
+      setUser(null); // Explicitly set user to null on sign out
     } catch (error) {
       throw error;
     }

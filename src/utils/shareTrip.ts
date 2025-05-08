@@ -31,36 +31,22 @@ export const shareTrip = async (trip: Trip) => {
         const structuredItinerary = JSON.parse(trip.structuredItinerary);
         shareMessage += '📅 Itinerary:\n';
         structuredItinerary.forEach((day: any) => {
-          shareMessage += `\nDay ${day.dayNumber} (${new Date(day.date).toLocaleDateString('en-US', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric'
-          })}):\n`;
+          shareMessage += `\nDay ${day.dayNumber} (${day.date}):\n`;
           day.activities.forEach((activity: any) => {
             shareMessage += `• ${activity.title}`;
-            if (activity.location) shareMessage += ` at ${activity.location}`;
             if (activity.startTime && activity.endTime) {
               shareMessage += ` (${activity.startTime} - ${activity.endTime})`;
             }
-            if (activity.cost) {
-              shareMessage += `\n  💰 Cost: ₹${activity.cost.toLocaleString('en-IN')}`;
-            }
-            if (activity.bookingReference) {
-              shareMessage += `\n  🎫 Booking Ref: ${activity.bookingReference}`;
-            }
-            if (activity.description) {
-              shareMessage += `\n  📝 ${activity.description}`;
+            if (activity.location) {
+              shareMessage += ` @ ${activity.location}`;
             }
             shareMessage += '\n';
           });
         });
+        shareMessage += '\n';
       } catch (error) {
-        if (trip.itinerary) {
-          shareMessage += '📅 Itinerary:\n' + trip.itinerary + '\n';
-        }
+        console.error('Error parsing structured itinerary:', error);
       }
-    } else if (trip.itinerary) {
-      shareMessage += '📅 Itinerary:\n' + trip.itinerary + '\n';
     }
 
     // Add Packing List if exists
