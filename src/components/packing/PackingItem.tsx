@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
+    flexDirection: 'row',
   },
   contentContainer: {
     flex: 1,
@@ -138,6 +139,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
+    alignSelf: 'flex-start',
+    marginTop: 2,
   },
   checkboxChecked: {
     backgroundColor: COLORS.primary,
@@ -148,6 +151,8 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.body1,
     fontFamily: FONTS.regular,
     color: COLORS.text,
+    flexShrink: 1,
+    marginRight: 8,
   },
   nameChecked: {
     textDecorationLine: "line-through",
@@ -157,6 +162,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginRight: 12,
+    flexShrink: 0,
   },
   quantityInput: {
     width: 40,
@@ -180,9 +186,11 @@ const styles = StyleSheet.create({
   noteButton: {
     padding: 4,
     marginRight: 8,
+    flexShrink: 0,
   },
   deleteButton: {
     padding: 4,
+    flexShrink: 0,
   },
   noteContainer: {
     marginTop: 8,

@@ -9,7 +9,7 @@ interface AuthProps{
 }
 
 export default function AuthScreen({navigation}:AuthProps){
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, sendPasswordReset } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('')
@@ -107,6 +107,44 @@ export default function AuthScreen({navigation}:AuthProps){
     }
   }
 
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      Alert.alert('Error', 'Please enter your email address');
+      return;
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await sendPasswordReset(email);
+      Alert.alert(
+        'Password Reset Email Sent',
+        'Please check your email for instructions to reset your password.',
+        [{ text: 'OK' }]
+      );
+    } catch (error: any) {
+      let errorMessage = 'Failed to send password reset email. Please try again.';
+      
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = 'No account found with this email address.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Please enter a valid email address.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many attempts. Please try again later.';
+      }
+      
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
     // clear fields when switching modes
@@ -203,11 +241,11 @@ export default function AuthScreen({navigation}:AuthProps){
           </View>
           {isLogin && (
             <View style={styles.forgotContainer}>
-              <TouchableOpacity onPress={() => Alert.alert('Password Recovery', 'TODO')}>
-                <Text style={styles.forgotText}> Forgot Text </Text>
+              <TouchableOpacity onPress={handleForgotPassword}>
+                <Text style={styles.forgotText}>Forgot Password?</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setIsLogin(false)}>
-                <Text style={styles.createText}> Create Account </Text>
+                <Text style={styles.createText}>Create Account</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -231,7 +269,7 @@ export default function AuthScreen({navigation}:AuthProps){
                 </Text>
               )}
             </TouchableOpacity>
-            <View style={styles.socialContainer}>
+            {/* <View style={styles.socialContainer}>
               <TouchableOpacity 
                 style={styles.socialButton}
                 onPress={() => handleSocialAuth('Google')}
@@ -258,7 +296,7 @@ export default function AuthScreen({navigation}:AuthProps){
                   <Text style={styles.socialIconText}>t</Text>
                 </View>
               </TouchableOpacity>
-            </View>
+            </View> */}
         </KeyboardAvoidingView>
       </View>
     </TouchableWithoutFeedback>
@@ -352,8 +390,8 @@ const styles = StyleSheet.create({
   },
   authButton: {
     backgroundColor: COLORS.primary,
-    borderRadius: 25,
-    paddingVertical: 14,
+    borderRadius: 8,
+    paddingVertical: 10,
     alignItems: 'center',
     marginBottom: 20,
     shadowColor: '#000',

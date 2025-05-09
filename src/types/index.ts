@@ -16,8 +16,6 @@ export interface ItineraryActivity {
   startTime?: string;
   endTime?: string;
   category: string;
-  // status: "planned" | "confirmed" | "completed";
-  // priority: "low" | "medium" | "high";
   cost?: number;
   bookingReference?: string;
 }

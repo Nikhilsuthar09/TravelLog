@@ -162,7 +162,7 @@ export default function TripDetailsScreen() {
           setTotalSpent(total);
         }
       } catch (error) {
-        console.error("Failed to parse expenses:", error);
+        // console.error("Failed to parse expenses:", error);
         setExpenses([]);
       }
     }
@@ -177,7 +177,7 @@ export default function TripDetailsScreen() {
           setPackedItemsCount(packedCount);
         }
       } catch (error) {
-        console.error("Failed to parse packing items:", error);
+        // console.error("Failed to parse packing items:", error);
         setPackingItems([]);
       }
     }
@@ -357,7 +357,7 @@ export default function TripDetailsScreen() {
         </View>
       );
     } catch (error) {
-      console.error("Failed to parse structured itinerary:", error);
+      // console.error("Failed to parse structured itinerary:", error);
       return (
         <View style={styles.emptyContentContainer}>
           <Feather name="alert-circle" size={40} color={COLORS.gray} />

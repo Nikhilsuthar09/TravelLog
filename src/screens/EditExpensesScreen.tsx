@@ -47,7 +47,7 @@ export default function EditExpensesScreen() {
           setTotalSpent(total);
         }
       } catch (error) {
-        console.error('Failed to parse expenses:', error);
+        // console.error('Failed to parse expenses:', error);
         setExpenses([]);
       }
     }
@@ -63,7 +63,7 @@ export default function EditExpensesScreen() {
           setCategories(parsedCategories);
         }
       } catch (error) {
-        console.error('Failed to parse categories:', error);
+        // console.error('Failed to parse categories:', error);
       }
     }
   }, [trip]);

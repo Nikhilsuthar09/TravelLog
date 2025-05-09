@@ -1,6 +1,5 @@
 // src/screens/EditItineraryScreen
-import { COLORS, FONTS } from "@constants/theme";
-import { Feather } from "@expo/vector-icons";
+import { COLORS } from "@constants/theme";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { ItineraryActivity, ItineraryDay } from "@types";
 import { useTrip } from "@context/TripContext";
@@ -8,12 +7,7 @@ import { RootStackParamList } from "@navigation/AppNavigator";
 import { useEffect, useState, useRef } from "react";
 import {
   View,
-  Text,
   StyleSheet,
-  TouchableOpacity,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
   Animated,
   StatusBar,
 } from "react-native";
@@ -33,16 +27,6 @@ const ACTIVITY_CATEGORIES = [
   "Shopping",
   "Entertainment",
   "Other",
-];
-const ACTIVITY_PRIORITY = [
-  { label: "Low Priority", value: "low" },
-  { label: "Medium Priority", value: "medium" },
-  { label: "High Priority", value: "high" },
-];
-const ACTIVITY_STATUS = [
-  { label: "Planned", value: "planned" },
-  { label: "Confirmed", value: "confirmed" },
-  { label: "Completed", value: "completed" },
 ];
 
 export default function EditItineraryScreen() {
@@ -97,7 +81,7 @@ export default function EditItineraryScreen() {
           setDays(parsedItinerary);
         }
       } catch (error) {
-        console.error("Failed to parse structured itinerary", error);
+        // console.error("Failed to parse structured itinerary", error);
       }
     } else if (trip.startDate && trip.endDate) {
       // If no structured itinerary, create empty days based on trip dates
@@ -150,8 +134,6 @@ export default function EditItineraryScreen() {
     setActivityStartTime(activity.startTime || "");
     setActivityEndTime(activity.endTime || "");
     setActivityCategory(activity.category);
-    setactivityStatus(activity.status);
-    setActivityPriority(activity.priority);
     setActivityCost(activity.cost ? activity.cost.toString() : "");
     setActivityBookingRef(activity.bookingReference || "");
   };
@@ -193,6 +175,11 @@ export default function EditItineraryScreen() {
   const handleSaveActivity = (activity: ItineraryActivity) => {
     if (!currentDay) return;
 
+    const activityData = {
+      ...activity,
+      id: activity.id || `activity_${currentDay.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    };
+
     if (isEditingActivity && currentActivity) {
       // Update existing activity
       setDays(
@@ -201,7 +188,7 @@ export default function EditItineraryScreen() {
             ? {
                 ...day,
                 activities: day.activities.map((a) =>
-                  a.id === currentActivity.id ? activity : a
+                  a.id === currentActivity.id ? activityData : a
                 ),
               }
             : day
@@ -214,7 +201,7 @@ export default function EditItineraryScreen() {
           day.id === currentDay.id
             ? {
                 ...day,
-                activities: [...day.activities, activity],
+                activities: [...day.activities, activityData],
               }
             : day
         )

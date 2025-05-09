@@ -108,12 +108,12 @@ export const shareTrip = async (trip: Trip) => {
 
     if (result.action === Share.sharedAction) {
       if (result.activityType) {
-        console.log('Shared with activity type:', result.activityType);
+        // Removed console.log
       } else {
-        console.log('Shared successfully');
+        // Removed console.log
       }
     } else if (result.action === Share.dismissedAction) {
-      console.log('Share dismissed');
+      // Removed console.log
     }
 
     return result;

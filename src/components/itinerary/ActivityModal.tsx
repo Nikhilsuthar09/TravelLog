@@ -19,24 +19,13 @@ import { formatCurrencyString } from '@utils/currency';
 const ACTIVITY_CATEGORIES = [
   "Sightseeing",
   "Food",
-  "Transportation",
+  "Travelling",
   "Accommodation",
   "Shopping",
   "Entertainment",
   "Other",
 ];
 
-const ACTIVITY_PRIORITY = [
-  { label: "Low Priority", value: "low" },
-  { label: "Medium Priority", value: "medium" },
-  { label: "High Priority", value: "high" },
-];
-
-const ACTIVITY_STATUS = [
-  { label: "Planned", value: "planned" },
-  { label: "Confirmed", value: "confirmed" },
-  { label: "Completed", value: "completed" },
-];
 
 interface ActivityModalProps {
   visible: boolean;
@@ -145,8 +134,6 @@ export default function ActivityModal({
       category,
       cost: cost ? parseFloat(formatCurrencyString(parseFloat(cost))) : undefined,
       bookingReference: bookingRef.trim() || undefined,
-      status: "planned",
-      priority: "medium",
     };
 
     onSave(activityData);

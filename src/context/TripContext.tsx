@@ -43,7 +43,7 @@ export const TripProvider = ({ children }: Props) => {
       });
       setTrips(tripsData);
     }, (error) => {
-      console.error("Error fetching trips:", error);
+      // console.error("Error fetching trips:", error); // Remove or comment out for production
     });
 
     return () => unsubscribe();

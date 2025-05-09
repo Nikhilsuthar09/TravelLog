@@ -50,7 +50,7 @@ export default function EditPackingScreen() {
           setPackingItems(parsedItems);
         }
       } catch (error) {
-        console.error("Failed to parse packing items", error);
+        // console.error("Failed to parse packing items", error);
         setPackingItems([]);
       }
     }

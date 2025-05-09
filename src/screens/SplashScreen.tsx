@@ -33,7 +33,7 @@ export default function SplashScreen({navigation}:SplashProps) {
           }
         }
         catch(error){
-          console.error('Error checking auth status: ',error);
+          // console.error('Error checking auth status: ',error); // Remove or comment out for production
           navigation.navigate('Auth')
         }
       };

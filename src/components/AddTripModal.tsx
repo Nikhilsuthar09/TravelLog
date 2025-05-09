@@ -77,7 +77,7 @@ export default function AddTripModal({ visible, onClose, onConfirm, trip }: Prop
       imageUri,
       budget: budget ? parseFloat(budget) : undefined,
       categories: trip?.categories || defaultCategories,
-      itinerary: trip?.itinerary || "",
+      structuredItinerary: trip?.structuredItinerary || "",
       packing: trip?.packing || "",
       expenses: trip?.expenses || "",
       notes: trip?.notes || [],
